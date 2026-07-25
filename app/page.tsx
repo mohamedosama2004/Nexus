@@ -16,6 +16,9 @@ export default function Home() {
         <Link href="/settings" className="btn">
         settings
         </Link>
+        <Link href="/login" className="btn">
+        Login
+        </Link>
       </ul>
      <div className="hero bg-base-200 min-h-screen">
         <div className="hero-content text-center">
