@@ -1,5 +1,5 @@
 import Link from "next/link";
-import BackButton from "../components/BackButton";
+import BackButton from "../../components/BackButton";
 import { isLoggedin } from "./profile/page";
 export default function DashboardPage() {
   
