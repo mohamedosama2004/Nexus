@@ -2,10 +2,10 @@
 import { useRouter, useSearchParams } from "next/navigation";
 
 const ProjectsView = () => {
-  type View ="grid" |"list" | "all" ;
+  type View ="grid" |"list"  ;
   const searchParams = useSearchParams();
   const router = useRouter();
-  const view = searchParams.get("view") ?? "all";
+  const view = searchParams.get("view") ?? "list";
   const handleView = (newView: View) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set("view", newView);
@@ -15,7 +15,6 @@ const ProjectsView = () => {
     <div>
       <button className="btn" onClick={()=>handleView('grid')}>grid</button>
       <button className="btn" onClick={()=>handleView('list')}>list</button>
-      <button className="btn" onClick={()=>handleView('all')}>all</button>
       <p> current View : {view}</p>
     </div>
   );
