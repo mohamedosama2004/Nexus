@@ -1,3 +1,4 @@
+import Navbar from "@/app/(application)/_components/Navbar";
 import SideNavbar from "@/app/(application)/_components/SideNavbar";
 
 export default function DashboardLayout({
@@ -7,9 +8,7 @@ export default function DashboardLayout({
 }>) {
   return (
     <div className="flex min-h-screen flex-col bg-gray-100">
-      <header className="bg-gray-900 p-4 text-white shadow-sm">
-        <h2 className="text-xl font-bold">Nexus Dashboard</h2>
-      </header>
+      <Navbar />
       <div className="flex flex-1">
         <SideNavbar />
         <main className="flex-1 p-6 ">{children}</main>
