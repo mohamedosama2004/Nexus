@@ -6,7 +6,7 @@ type ProjectPageProps = {
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { projectId } = await params;
-//   const {status='all' ,page="2"} =await searchParams
+
   return <div>
     <p>project :{projectId}</p>
     <ProjectsFilter/>

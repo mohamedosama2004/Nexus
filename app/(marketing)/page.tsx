@@ -1,6 +1,9 @@
+'use client'
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router=useRouter(); 
   return (
     <main>
       <ul>
@@ -32,7 +35,9 @@ export default function Home() {
              <p>
                 Manage projects, tasks , and teams in one place
               </p>
-            <button className="btn btn-primary">
+            <button className="btn btn-primary" onClick={()=>{
+              router.push('/login')
+            }}>
               Get started
             </button>
           </div>
