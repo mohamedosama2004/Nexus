@@ -1,4 +1,4 @@
-import SideNavbar from "@/app/components/SideNavbar";
+import SideNavbar from "@/app/(application)/_components/SideNavbar";
 
 export default function DashboardLayout({
   children,
