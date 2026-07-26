@@ -1,4 +1,4 @@
-import ProjectsFilter from "@/app/components/ProjectsFilter";
+import ProjectsView from "@/app/(application)/_components/ProjectsFilter";
 
 type ProjectPageProps = {
   params: Promise<{ projectId: string }>;
@@ -7,9 +7,12 @@ type ProjectPageProps = {
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { projectId } = await params;
 
-  return <div>
-    <p>project :{projectId}</p>
-    <ProjectsFilter/>
-    
-  </div>;
+  return (
+    <div>
+      <p>project :{projectId}</p>
+      <ProjectsView />
+    </div>
+  );
 }
+
+
