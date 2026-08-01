@@ -12,9 +12,9 @@ const SearchFilters = () => {
   const handleSearch = (term: string) => {
     const params = new URLSearchParams(searchParams);
     if (term) {
-      params.set("search", term);
+      params.set("query", term);
     } else {
-      params.delete("search");
+      params.delete("query");
     }
     router.replace(`?${params.toString()}`);
   };
@@ -51,7 +51,7 @@ const SearchFilters = () => {
           onChange={(e) => handleSearch(e.target.value)}
           defaultValue={searchParams.get("search")?.toString()}
         />
-        <MagnifyingGlassIcon className="h-[18px] w-[18px] opacity-70" />
+        <MagnifyingGlassIcon className="h-4.5 w-4.5 opacity-70" />
       </label>
     </div>
   );
