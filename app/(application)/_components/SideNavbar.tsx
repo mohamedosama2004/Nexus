@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import Logo from "./Logo";
 
 const links = [
   { label: "Dashboard", href: "/dashboard" },
@@ -19,7 +20,7 @@ export default function SideNavbar() {
     <>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 rounded-md bg-gray-800 p-2 text-white lg:hidden"
+        className="fixed top-4 left-4 z-50 rounded-md bg-primary p-2 text-primary-content lg:hidden"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -45,11 +46,12 @@ export default function SideNavbar() {
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-40 h-full w-64 bg-gray-900 text-white transition-transform duration-300 lg:static lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-40 min-h-full w-64 border-r border-base-200 bg-base-300 text-base-content transition-transform duration-300 lg:static lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <nav className="flex flex-col gap-1 p-4 ">
+         <Logo/>
           {links.map((link) => (
             <Link
               key={link.href}
@@ -57,8 +59,8 @@ export default function SideNavbar() {
               onClick={() => setIsOpen(false)}
               className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                 pathname === link.href
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                  ? "bg-primary text-primary-content"
+                  : "text-base-content/70 hover:bg-base-200 hover:text-base-content"
               }`}
             >
               {link.label}
