@@ -1,10 +1,10 @@
-import { getProjects } from "@/lib/data/projects";
+import { getProjectsBySearch } from "@/lib/data/projectsSearch";
 type Props = {
   query: string;
 };
 
 export default async function ProjectsList({ query }: Props) {
-  const projects = await getProjects(query);
+  const projects = await getProjectsBySearch(query);
 
   return (
     <div className="rounded-box border p-4">

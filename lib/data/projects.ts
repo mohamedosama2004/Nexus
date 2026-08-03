@@ -1,38 +1,10 @@
-export type ProjectStatus = "active" | "completed";
+import { Post } from "../definitions";
 
-export interface Project {
-  id: number;
-  name: string;
-  description: string;
-  status: ProjectStatus;
-}
-
-const projects: Project[] = [
-  {
-    id: 1,
-    name: "Nexus Dashboard",
-    description: "Admin dashboard",
-    status: "active",
-  },
-  {
-    id: 2,
-    name: "Authentication",
-    description: "Login & Register",
-    status: "completed",
-  },
-  {
-    id: 3,
-    name: "Project Explorer",
-    description: "Search and filtering",
-    status: "active",
-  },
-];
-
-export async function getProjects(query: string) {
-  await new Promise((resolve) => setTimeout(resolve, 3000));
-  const normalizedQuery = query.trim().toLowerCase();
-
-  return projects.filter((project) =>
-    project.name.toLowerCase().includes(normalizedQuery),
-  );
+export async function getProjects() {
+    const response =await fetch ("https://jsonplaceholder.typicode.com/posts") 
+    if(!response.ok) {
+        throw new Error ("cannot fetch data")
+    }
+    const posts :Post[]= await response.json() ;
+    return posts 
 }

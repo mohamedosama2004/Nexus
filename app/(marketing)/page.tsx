@@ -1,28 +1,11 @@
 'use client'
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router=useRouter(); 
   return (
     <main>
-      <ul>
-        <Link href="/dashboard" className="btn">
-        dashboard
-        </Link>
-        <Link href="/dashboard/analytics" className="btn">
-        analytics
-        </Link>
-        <Link href="/projects" className="btn">
-        projects
-        </Link>
-        <Link href="/settings" className="btn">
-        settings
-        </Link>
-        <Link href="/login" className="btn">
-        Login
-        </Link>
-      </ul>
+      
      <div className="hero bg-base-200 min-h-screen">
         <div className="hero-content text-center">
           <div className="max-w-md space-y-5">
