@@ -1,4 +1,4 @@
-import { getProjectsBySearch } from "@/lib/data/projectsSearch";
+import { getProjectsBySearch } from "@/src/lib/data/projectsSearch";
 type Props = {
   query: string;
 };

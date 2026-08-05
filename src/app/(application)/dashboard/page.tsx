@@ -1,7 +1,7 @@
-import { getAttachments } from "@/lib/data/attachments";
-import { getUsers } from "@/lib/data/members";
-import { getProjects } from "@/lib/data/projects";
-import { getTasks } from "@/lib/data/tasks";
+import { getAttachments } from "@/src/lib/data/attachments";
+import { getUsers } from "@/src/lib/data/members";
+import { getProjects } from "@/src/lib/data/projects";
+import { getTasks } from "@/src/lib/data/tasks";
 
 export default async function DashboardPage() {
   const [users, projects, tasks, attachments] = await Promise.all([

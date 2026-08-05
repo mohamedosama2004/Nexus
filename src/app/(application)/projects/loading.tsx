@@ -1,4 +1,4 @@
-import ProjectCardSkeleton from "../_components/skeletons/projectCardSkeleton";
+import ProjectCardSkeleton from "../../../components/skeletons/projectCardSkeleton";
 
 export default function ProjectsLoadingSkeleton() {
   const CARD_COUNT = 6;
