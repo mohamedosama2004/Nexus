@@ -1,4 +1,8 @@
-export default function ProjectNameInput() {
+type Props = {
+   error: string | null;
+};
+
+export default function ProjectNameInput({error}:Props) {
   return (
     <div className="form-control w-full">
       <label className="label" htmlFor="projectName">
@@ -10,8 +14,12 @@ export default function ProjectNameInput() {
         name="projectName"
         placeholder="e.g. Nexus Dashboard"
         className="input input-bordered w-full"
-        required
       />
+        {error && (
+            <p className="text-error">
+               {error}
+            </p>
+         )}
     </div>
   );
 }
