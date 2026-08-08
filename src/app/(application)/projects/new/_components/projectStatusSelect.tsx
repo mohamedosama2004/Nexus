@@ -1,6 +1,6 @@
 import { ProjectStatus } from "@/src/lib/definitions";
 
-const statuses: ProjectStatus[] = ["active", "completed"];
+const statuses:ProjectStatus[] = ["Active", "Completed"];
 
 export default function ProjectStatusSelect() {
   return (
@@ -12,7 +12,7 @@ export default function ProjectStatusSelect() {
         id="status"
         name="status"
         className="select select-bordered w-full"
-        defaultValue="active"
+        defaultValue="Active"
       >
         {statuses.map((status) => (
           <option key={status} value={status}>

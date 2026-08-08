@@ -1,5 +1,5 @@
 import { z } from "zod";
-const projectStatuses = ["active", "archived"] as const;
+const projectStatuses = ["Active", "Completed"] as const;
 
 export const projectSchema = z.object({
   projectName: z
