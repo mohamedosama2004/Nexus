@@ -25,6 +25,7 @@ export default async function ProjectsList({ query }: Props) {
             </p>
 
             <span className="badge badge-outline mt-2">{project.status}</span>
+            <span className="block badge badge-outline mt-2">priority : {project.priority}</span>
           </div>
         ))}
       </div>

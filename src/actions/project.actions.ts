@@ -42,6 +42,7 @@ export async function createProject(
       title: result.data.projectName,
       description: result.data.description,
       status: result.data.status,
+      priority:'high' ,
       workspaceId: workspace.id,
     },
   });

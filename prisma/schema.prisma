@@ -53,6 +53,7 @@ model Project {
   description String?
   status      String
   workspaceId String
+  priority String @default("medium")
 
   workspace Workspace @relation(fields: [workspaceId], references: [id])
   tasks     Task[]
