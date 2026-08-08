@@ -12,12 +12,62 @@ datasource db {
   provider = "postgresql"
 }
 
+
+
+// models 
+
+
+model User {
+  id          String       @id @default(cuid())
+  name        String
+  email       String       @unique
+  createdAt   DateTime     @default(now())
+
+  memberships Membership[]
+}
+
+model Workspace {
+  id          String       @id @default(cuid())
+  name        String
+  createdAt   DateTime     @default(now())
+
+  memberships Membership[]
+  projects    Project[]
+}
+
+model Membership {
+  id          String    @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        String
+
+  user      User      @relation(fields: [userId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([userId, workspaceId])
+}
+
 model Project {
+  id          String    @id @default(cuid())
+  title        String
+  description String?
+  status      String
+  workspaceId String
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  tasks     Task[]
+
+  @@index([workspaceId])
+}
+
+model Task {
   id          String   @id @default(cuid())
   title       String
   description String?
   status      String
+  projectId   String
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
 }

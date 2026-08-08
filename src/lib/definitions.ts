@@ -1,11 +1,13 @@
 type ID = number;
 // project
-export type ProjectStatus = "active" | "completed";
+export type ProjectStatus = "Active" | "Completed";
 export interface Project {
-  id: ID;
-  name: string;
-  description: string;
-  status: ProjectStatus;
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  createdAt :Date; 
+  updatedAt:Date
 }
 // users
 export type User = {

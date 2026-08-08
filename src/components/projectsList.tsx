@@ -14,10 +14,14 @@ export default async function ProjectsList({ query }: Props) {
             key={project.id}
             className="rounded-lg border border-base-300 p-3"
           >
-            <h2 className="font-semibold">{project.name}</h2>
+            <h2 className="font-semibold">{project.title}</h2>
 
             <p className="text-sm text-base-content/70">
               {project.description}
+            </p>
+            
+            <p className="text-sm text-base-content/70">
+              {project.workspaceId}
             </p>
 
             <span className="badge badge-outline mt-2">{project.status}</span>
