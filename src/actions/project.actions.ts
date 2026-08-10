@@ -2,6 +2,7 @@
 
 import { projectSchema } from "../schemas/project.schema";
 import { prisma } from "../lib/prisma";
+import { revalidatePath } from "next/cache";
 
 export type ProjectActionState = {
   success: boolean;
@@ -45,6 +46,8 @@ export async function createProject(
       workspaceId: workspace.id,
     },
   });
+
+  revalidatePath("/projects");
 
   return {
     success: true,

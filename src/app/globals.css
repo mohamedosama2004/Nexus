@@ -26,3 +26,36 @@
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 } */
+
+@keyframes modal-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes modal-box-zoom-out {
+  from {
+    opacity: 1;
+    scale: 1;
+  }
+  to {
+    opacity: 0;
+    scale: 0.95;
+  }
+}
+
+dialog.modal.modal-closing {
+  animation: modal-fade-out 0.2s ease-out forwards;
+}
+
+dialog.modal.modal-closing .modal-box {
+  animation: modal-box-zoom-out 0.2s ease-out forwards;
+}
+
+dialog.modal.modal-closing::backdrop {
+  background-color: transparent;
+  transition: background-color 0.2s ease-out;
+}

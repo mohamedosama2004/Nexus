@@ -1,15 +1,20 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
-export default function BackButton() {
+type BackButtonProps = {
+  children?: ReactNode;
+};
+
+export default function BackButton({ children }: BackButtonProps) {
   const router = useRouter();
   function handleClick() {
     router.back();
   }
   return (
     <button className="btn" onClick={handleClick}>
-      Go back
+      {children ? children : "Go back"}
     </button>
   );
 }

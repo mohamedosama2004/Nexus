@@ -1,6 +1,6 @@
 import { ProjectStatus } from "@/src/lib/definitions";
 
-const statuses:ProjectStatus[] = ["Active", "Completed"];
+const statuses: ProjectStatus[] = ["Active", "Completed"];
 
 export default function ProjectStatusSelect() {
   return (
