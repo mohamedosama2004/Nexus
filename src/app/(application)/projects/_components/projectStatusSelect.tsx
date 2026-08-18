@@ -2,7 +2,11 @@ import { ProjectStatus } from "@/src/lib/definitions";
 
 const statuses: ProjectStatus[] = ["Active", "Completed"];
 
-export default function ProjectStatusSelect() {
+type Props = {
+  defaultValue?: string;
+};
+
+export default function ProjectStatusSelect({ defaultValue = "Active" }: Props) {
   return (
     <div className="form-control w-full">
       <label className="label" htmlFor="status">
@@ -12,7 +16,7 @@ export default function ProjectStatusSelect() {
         id="status"
         name="status"
         className="select select-bordered w-full"
-        defaultValue="Active"
+        defaultValue={defaultValue}
       >
         {statuses.map((status) => (
           <option key={status} value={status}>

@@ -1,8 +1,9 @@
 type Props = {
   error: string | null;
+  defaultValue?: string;
 };
 
-export default function ProjectNameInput({ error }: Props) {
+export default function ProjectNameInput({ error, defaultValue }: Props) {
   return (
     <div className="form-control w-full">
       <label className="label" htmlFor="projectName">
@@ -14,6 +15,7 @@ export default function ProjectNameInput({ error }: Props) {
         name="projectName"
         placeholder="e.g. Nexus Dashboard"
         className="input input-bordered w-full"
+        defaultValue={defaultValue}
       />
       {error && <p className="text-error">{error}</p>}
     </div>

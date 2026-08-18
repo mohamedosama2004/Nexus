@@ -15,3 +15,7 @@ export const projectSchema = z.object({
 
   status: z.enum(projectStatuses),
 });
+
+export const updateProjectSchema = projectSchema.extend({
+  id: z.string().min(1, "Project ID is required."),
+});

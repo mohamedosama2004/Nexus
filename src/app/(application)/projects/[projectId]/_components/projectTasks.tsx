@@ -1,5 +1,7 @@
 import ProjectStatusBadge from "@/src/components/projectStatusBadge";
 import CreateTaskModal from "./createTaskModal";
+import DeleteTaskButton from "./deleteTaskButton";
+import EditTaskModal from "./editTaskModal";
 import type { ProjectWithTasks } from "./types";
 
 type Props = {
@@ -36,7 +38,21 @@ export default function ProjectTasks({ projectId, tasks }: Props) {
                   )}
                   <p className="text-xs text-base-content/40">#{task.id}</p>
                 </div>
-                <ProjectStatusBadge status={task.status} outline />
+                <div className="flex items-center gap-1">
+                  <ProjectStatusBadge status={task.status} outline />
+                  <EditTaskModal
+                    projectId={projectId}
+                    taskId={task.id}
+                    title={task.title}
+                    description={task.description}
+                    status={task.status}
+                  />
+                  <DeleteTaskButton
+                    projectId={projectId}
+                    taskId={task.id}
+                    taskTitle={task.title}
+                  />
+                </div>
               </li>
             ))}
           </ul>

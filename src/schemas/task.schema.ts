@@ -18,3 +18,7 @@ export const taskSchema = z.object({
 
   projectId: z.string().min(1, "Project is required."),
 });
+
+export const updateTaskSchema = taskSchema.extend({
+  id: z.string().min(1, "Task ID is required."),
+});

@@ -1,6 +1,10 @@
 const taskStatuses = ["active", "completed", "TODO"] as const;
 
-export default function TaskStatusSelect() {
+type Props = {
+  defaultValue?: string;
+};
+
+export default function TaskStatusSelect({ defaultValue = "active" }: Props) {
   return (
     <div className="form-control w-full">
       <label className="label" htmlFor="status">
@@ -10,7 +14,7 @@ export default function TaskStatusSelect() {
         id="status"
         name="status"
         className="select select-bordered w-full"
-        defaultValue="active"
+        defaultValue={defaultValue}
       >
         {taskStatuses.map((status) => (
           <option key={status} value={status}>

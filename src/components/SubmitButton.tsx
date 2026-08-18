@@ -2,7 +2,15 @@
 
 import { useFormStatus } from "react-dom";
 
-export function SubmitButton() {
+type Props = {
+  label?: string;
+  pendingLabel?: string;
+};
+
+export function SubmitButton({
+  label = "Create",
+  pendingLabel = "Creating...",
+}: Props) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -10,7 +18,7 @@ export function SubmitButton() {
       className="btn btn-primary"
       type="submit"
     >
-      {pending ? "Creating..." : "Create"}
+      {pending ? pendingLabel : label}
     </button>
   );
 }

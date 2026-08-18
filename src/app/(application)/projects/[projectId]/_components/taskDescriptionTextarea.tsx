@@ -1,4 +1,8 @@
-export default function TaskDescriptionTextarea() {
+type Props = {
+  defaultValue?: string;
+};
+
+export default function TaskDescriptionTextarea({ defaultValue }: Props) {
   return (
     <div className="form-control w-full">
       <label className="label" htmlFor="description">
@@ -10,6 +14,7 @@ export default function TaskDescriptionTextarea() {
         placeholder="Describe what this task involves"
         className="textarea textarea-bordered w-full"
         rows={4}
+        defaultValue={defaultValue}
       />
     </div>
   );
