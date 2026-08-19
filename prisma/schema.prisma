@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -12,25 +7,30 @@ datasource db {
   provider = "postgresql"
 }
 
-
-
-// models 
-
-
 model User {
-  id          String       @id @default(cuid())
-  name        String
-  email       String       @unique
-  createdAt   DateTime     @default(now())
+  id           String       @id @default(cuid())
+  name         String
+  email        String       @unique
+  createdAt    DateTime     @default(now())
+  passwordHash String
 
   memberships Membership[]
+  sessions    Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Workspace {
   id          String       @id @default(cuid())
   name        String
   createdAt   DateTime     @default(now())
-
   memberships Membership[]
   projects    Project[]
 }
@@ -40,34 +40,32 @@ model Membership {
   userId      String
   workspaceId String
   role        String
-
-  user      User      @relation(fields: [userId], references: [id])
-  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
   @@unique([userId, workspaceId])
 }
 
 model Project {
   id          String    @id @default(cuid())
-  title        String
+  title       String
   description String?
   status      String
   workspaceId String
-
-  workspace Workspace @relation(fields: [workspaceId], references: [id])
-  tasks     Task[]
+  priority    String    @default("medium")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  tasks       Task[]
 
   @@index([workspaceId])
 }
 
 model Task {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
   status      String
   projectId   String
-
-  project Project @relation(fields: [projectId], references: [id])
+  project     Project @relation(fields: [projectId], references: [id])
 
   @@index([projectId])
 }

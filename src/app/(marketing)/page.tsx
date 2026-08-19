@@ -1,27 +1,44 @@
-"use client";
-import { useRouter } from "next/navigation";
+import { MarketingNavbar } from "./components/MarketingNavbar";
+import { HeroSection } from "./components/HeroSection";
+import { LogoCloud } from "./components/LogoCloud";
+import { FeaturesSection } from "./components/FeaturesSection";
+import { ProductShowcase } from "./components/ProductShowcase";
+import { CollaborationSection } from "./components/CollaborationSection";
+import { WorkflowSection } from "./components/WorkflowSection";
+import { PricingSection } from "./components/PricingSection";
+import { TestimonialSection } from "./components/TestimonialSection";
+import { CTASection } from "./components/CTASection";
+import { MarketingFooter } from "./components/MarketingFooter";
+import { ScrollReveal } from "./components/ScrollReveal";
 
-export default function Home() {
-  const router = useRouter();
+export default function MarketingPage() {
   return (
-    <main>
-      <div className="hero bg-base-200 min-h-screen">
-        <div className="hero-content text-center">
-          <div className="max-w-md space-y-5">
-            <h1 className="text-5xl font-bold">Nexus</h1>
-            <p className="font-bold">Project Management Saas</p>
-            <p>Manage projects, tasks , and teams in one place</p>
-            <button
-              className="btn btn-primary"
-              onClick={() => {
-                router.push("/login");
-              }}
-            >
-              Get started
-            </button>
-          </div>
-        </div>
-      </div>
-    </main>
+    <>
+      <main>
+        <HeroSection />
+        <ScrollReveal>
+          <LogoCloud />
+        </ScrollReveal>
+        <ScrollReveal>
+          <FeaturesSection />
+        </ScrollReveal>
+        <ScrollReveal>
+          <ProductShowcase />
+        </ScrollReveal>
+        <ScrollReveal>
+          <CollaborationSection />
+        </ScrollReveal>
+        <ScrollReveal>
+          <WorkflowSection />
+        </ScrollReveal>
+      
+        <ScrollReveal>
+          <TestimonialSection />
+        </ScrollReveal>
+        <ScrollReveal>
+          <CTASection />
+        </ScrollReveal>
+      </main>
+    </>
   );
 }
