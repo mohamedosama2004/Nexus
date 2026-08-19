@@ -8,14 +8,42 @@ import {
   FolderIcon,
   UsersIcon,
 } from "@heroicons/react/24/outline";
+import type { ReactNode } from "react";
 
-const stats = [
-  { label: "Users", icon: UsersIcon },
-  { label: "Projects", icon: FolderIcon },
-  { label: "Tasks", icon: CheckCircleIcon },
-  { label: "Attachments", icon: DocumentTextIcon },
+const statConfig = [
+  { label: "Total Users", icon: UsersIcon, color: "text-blue-500", bg: "bg-blue-500/10" },
+  { label: "Projects", icon: FolderIcon, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+  { label: "Tasks", icon: CheckCircleIcon, color: "text-amber-500", bg: "bg-amber-500/10" },
+  { label: "Attachments", icon: DocumentTextIcon, color: "text-purple-500", bg: "bg-purple-500/10" },
 ] as const;
 
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  color,
+  bg,
+}: {
+  label: string;
+  value: number;
+  icon: React.ElementType;
+  color: string;
+  bg: string;
+}) {
+  return (
+    <div className="rounded-xl border border-base-200 bg-base-100 p-5 transition-shadow hover:shadow-md">
+      <div className="flex items-center justify-between">
+        <div className={`flex size-10 items-center justify-center rounded-lg ${bg}`}>
+          <Icon className={`h-5 w-5 ${color}`} />
+        </div>
+      </div>
+      <div className="mt-4">
+        <div className="text-2xl font-bold text-base-content">{value}</div>
+        <div className="mt-0.5 text-sm text-base-content/50">{label}</div>
+      </div>
+    </div>
+  );
+}
 
 export default async function Stats() {
   const [users, projects, tasks, attachments] = await Promise.all([
@@ -27,20 +55,17 @@ export default async function Stats() {
   const values = [users.length, projects.length, tasks.length, attachments.length];
 
   return (
-    <div className="stats stats-vertical w-full shadow-sm lg:stats-horizontal">
-      {stats.map((stat, index) => {
-        const Icon = stat.icon;
-        return (
-          <div key={stat.label} className="stat">
-            <div className="stat-figure text-primary">
-              <Icon className="size-8" />
-            </div>
-            <div className="stat-title">{stat.label}</div>
-            <div className="stat-value text-primary">{values[index]}</div>
-            <div className="stat-desc">Total in workspace</div>
-          </div>
-        );
-      })}
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {statConfig.map((stat, index) => (
+        <StatCard
+          key={stat.label}
+          label={stat.label}
+          value={values[index]}
+          icon={stat.icon}
+          color={stat.color}
+          bg={stat.bg}
+        />
+      ))}
     </div>
   );
 }

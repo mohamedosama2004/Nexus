@@ -8,36 +8,34 @@ export default async function Activity() {
   ]);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <section className="card border border-base-200 bg-base-100 shadow-sm">
-        <div className="card-body">
-          <div className="card-title">
-            Team Members
-            <span className="badge badge-ghost">{users.length} users</span>
-          </div>
-
-          <div className="grid gap-2 sm:grid-cols-2">
+    <div className="grid gap-4 lg:grid-cols-2">
+      {/* Team Members */}
+      <section className="rounded-xl border border-base-200 bg-base-100">
+        <div className="flex items-center justify-between border-b border-base-200 px-5 py-4">
+          <h2 className="text-base font-semibold text-base-content">Team Members</h2>
+          <span className="rounded-full bg-base-200 px-2.5 py-0.5 text-xs font-medium text-base-content/60">
+            {users.length} users
+          </span>
+        </div>
+        <div className="p-5">
+          <div className="flex flex-col gap-2">
             {users.map((user) => (
               <div
                 key={user.id}
-                className="flex items-center gap-3 rounded-box border border-base-200 p-4 transition-colors hover:border-primary/40 hover:bg-base-200/50"
+                className="flex items-center gap-3 rounded-lg border border-base-200 p-3 transition-all hover:border-primary/30 hover:shadow-sm"
               >
-                <div className="avatar placeholder">
-                  <div className="w-11 rounded-full bg-primary text-primary-content">
-                    <span className="font-bold">
-                      {user.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .slice(0, 2)
-                        .join("")}
-                    </span>
-                  </div>
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                  {user.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .slice(0, 2)
+                    .join("")}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-semibold text-base-content truncate">
+                  <p className="truncate text-sm font-medium text-base-content">
                     {user.name}
                   </p>
-                  <p className="text-sm text-base-content/60 truncate">
+                  <p className="truncate text-xs text-base-content/50">
                     {user.email}
                   </p>
                 </div>
@@ -47,23 +45,25 @@ export default async function Activity() {
         </div>
       </section>
 
-      <section className="card border border-base-200 bg-base-100 shadow-sm">
-        <div className="card-body">
-          <div className="card-title">
-            Attachments
-            <span className="badge badge-ghost">{attachments.length} albums</span>
-          </div>
-
+      {/* Attachments */}
+      <section className="rounded-xl border border-base-200 bg-base-100">
+        <div className="flex items-center justify-between border-b border-base-200 px-5 py-4">
+          <h2 className="text-base font-semibold text-base-content">Attachments</h2>
+          <span className="rounded-full bg-base-200 px-2.5 py-0.5 text-xs font-medium text-base-content/60">
+            {attachments.length} files
+          </span>
+        </div>
+        <div className="p-5">
           <div className="grid grid-cols-2 gap-2">
             {attachments.slice(0, 8).map((album) => (
               <div
                 key={album.id}
-                className="rounded-box border border-base-200 bg-base-200/50 p-3"
+                className="rounded-lg border border-base-200 bg-base-200/30 p-3 transition-all hover:border-primary/30 hover:shadow-sm"
               >
                 <p className="text-sm font-medium text-base-content line-clamp-2">
                   {album.title}
                 </p>
-                <span className="mt-1 inline-block text-xs text-base-content/50">
+                <span className="mt-1 inline-block text-xs text-base-content/40">
                   #{album.id}
                 </span>
               </div>
