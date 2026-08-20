@@ -2,6 +2,11 @@
 
 import { projectSchema, updateProjectSchema } from "../schemas/project.schema";
 import { prisma } from "../lib/prisma";
+import {
+  requireProjectPermission,
+} from "../lib/authorization";
+import { ProjectRole } from "../generated/prisma/enums";
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
 export type ProjectActionState = {
@@ -28,7 +33,30 @@ export async function createProject(
     };
   }
 
-  // Get a workspace for this lesson/test
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get("session_token")?.value;
+
+  if (!sessionToken) {
+    return {
+      success: false,
+      error: "You must be logged in.",
+    };
+  }
+
+  const session = await prisma.session.findUnique({
+    where: {
+      token: sessionToken,
+    },
+  });
+
+  if (!session || session.expiresAt < new Date()) {
+    return {
+      success: false,
+      error: "Your session is invalid or expired.",
+    };
+  }
+
+  // Current workspace for the current Nexus flow.
   const workspace = await prisma.workspace.findFirst();
 
   if (!workspace) {
@@ -38,13 +66,41 @@ export async function createProject(
     };
   }
 
-  await prisma.project.create({
-    data: {
-      title: result.data.projectName,
-      description: result.data.description,
-      status: result.data.status,
-      workspaceId: workspace.id,
+  const membership = await prisma.membership.findUnique({
+    where: {
+      userId_workspaceId: {
+        userId: session.userId,
+        workspaceId: workspace.id,
+      },
     },
+  });
+
+  if (!membership) {
+    return {
+      success: false,
+      error: "You are not a member of this workspace.",
+    };
+  }
+
+  const resultTransaction = await prisma.$transaction(async (tx) => {
+    const project = await tx.project.create({
+      data: {
+        title: result.data.projectName,
+        description: result.data.description,
+        status: result.data.status,
+        workspaceId: workspace.id,
+      },
+    });
+
+    await tx.projectMember.create({
+      data: {
+        userId: session.userId,
+        projectId: project.id,
+        role: ProjectRole.OWNER,
+      },
+    });
+
+    return project;
   });
 
   revalidatePath("/projects");
@@ -52,6 +108,7 @@ export async function createProject(
   return {
     success: true,
     error: null,
+    projectId: resultTransaction.id,
   };
 }
 
@@ -75,8 +132,39 @@ export async function updateProject(
     };
   }
 
+  const project = await prisma.project.findUnique({
+    where: {
+      id: result.data.id,
+    },
+    select: {
+      id: true,
+      workspaceId: true,
+    },
+  });
+
+  if (!project) {
+    return {
+      success: false,
+      error: "Project not found.",
+    };
+  }
+
+  const authorization = await requireProjectPermission(
+    result.data.id,
+    "UPDATE_PROJECT",
+  );
+
+  if (!authorization.authorized) {
+    return {
+      success: false,
+      error: authorization.error ?? "Unauthorized.",
+    };
+  }
+
   await prisma.project.update({
-    where: { id: result.data.id },
+    where: {
+      id: result.data.id,
+    },
     data: {
       title: result.data.projectName,
       description: result.data.description,
@@ -107,8 +195,13 @@ export async function deleteProject(
   }
 
   const project = await prisma.project.findUnique({
-    where: { id },
-    select: { id: true },
+    where: {
+      id,
+    },
+    select: {
+      id: true,
+      workspaceId: true,
+    },
   });
 
   if (!project) {
@@ -118,8 +211,22 @@ export async function deleteProject(
     };
   }
 
+  const authorization = await requireProjectPermission(
+    project.id,
+    "DELETE_PROJECT",
+  );
+
+  if (!authorization.authorized) {
+    return {
+      success: false,
+      error: authorization.error ?? "Unauthorized.",
+    };
+  }
+
   await prisma.project.delete({
-    where: { id },
+    where: {
+      id,
+    },
   });
 
   revalidatePath("/projects");

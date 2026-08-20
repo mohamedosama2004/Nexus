@@ -1,6 +1,6 @@
 @import "tailwindcss";
-@plugin "daisyui"{
-  themes :silk
+@plugin "daisyui" {
+  themes: corporate, sunset;
 }
 :root {
   --background: #ffffff;

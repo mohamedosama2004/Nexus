@@ -8,9 +8,12 @@ export default function AuthLayout({
   return (
     <div className="hero min-h-screen bg-base-200">
       <div className="hero-content flex-col w-full max-w-md">
-        <Link href="/" className="text-3xl font-bold text-primary">
-          Nexus
-        </Link>
+        <div className="flex w-full justify-center ">
+          <Link href="/" className="text-3xl font-bold text-primary ">
+            Nexus
+          </Link>
+          
+        </div>
         <div className="card w-full bg-base-100 shadow-xl">
           <div className="card-body">{children}</div>
         </div>

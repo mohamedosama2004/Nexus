@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "../providers/query-provider";
+import { ThemeScript } from "../components/ThemeScript";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,10 +28,11 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      data-theme="silk"
+      data-theme="corporate"
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-base-100 text-base-content">
+        <ThemeScript />
         <QueryProvider>{children}</QueryProvider>
       </body>
     </html>

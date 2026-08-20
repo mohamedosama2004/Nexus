@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { TrashIcon } from "@heroicons/react/24/outline";
+import { ExclamationCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -24,10 +24,10 @@ export default function DeleteProjectButton({ projectId, projectName }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const isClosingRef = useRef(false);
   const [modalClosing, setModalClosing] = useState(false);
-  const [state, formAction] = useActionState(deleteProject, {
-    success: false,
-    error: null,
-  } satisfies ProjectActionState);
+  const [state, formAction] = useActionState<ProjectActionState, FormData>(
+    deleteProject,
+    { success: false, error: null },
+  );
 
   const closeModal = useCallback(() => {
     const dialog = dialogRef.current;
@@ -110,7 +110,10 @@ export default function DeleteProjectButton({ projectId, projectName }: Props) {
             </div>
 
             {state.error && (
-              <p className="text-error text-sm">{state.error}</p>
+              <div className="alert alert-error">
+                <ExclamationCircleIcon className="size-5 shrink-0" />
+                <span>{state.error}</span>
+              </div>
             )}
 
             <div className="modal-action">

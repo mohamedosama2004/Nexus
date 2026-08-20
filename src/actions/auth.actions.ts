@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import { prisma } from "../lib/prisma";
 import { loginSchema, registerSchema } from "../schemas/auth.schema";
 
+
 export async function register(formData: FormData) {
   const name = formData.get("name");
   const email = formData.get("email");
@@ -41,36 +42,58 @@ export async function register(formData: FormData) {
 
   const passwordHash = await bcrypt.hash(validPassword, 10);
 
-  const user = await prisma.user.create({
-    data: {
-      name: validName,
-      email: validEmail,
-      passwordHash,
-    },
+  const resultTransaction = await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        name: validName,
+        email: validEmail,
+        passwordHash,
+      },
+    });
+
+    const workspace = await tx.workspace.create({
+      data: {
+        name: `${validName}'s Workspace`,
+      },
+    });
+
+    await tx.membership.create({
+      data: {
+        userId: user.id,
+        workspaceId: workspace.id,
+        role: "OWNER",
+      },
+    });
+
+    return {
+      user,
+      workspace,
+    };
   });
 
   const sessionToken = crypto.randomUUID();
 
   await prisma.session.create({
     data: {
-      userId: user.id,
+      userId: resultTransaction.user.id,
       token: sessionToken,
       expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
     },
   });
+
   const cookieStore = await cookies();
 
-cookieStore.set("session_token", sessionToken, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
-  expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-  path: "/",
-});
+  cookieStore.set("session_token", sessionToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+    path: "/",
+  });
 
   return {
     success: true,
-    userId: user.id,
+    userId: resultTransaction.user.id,
   };
 }
 
@@ -103,10 +126,7 @@ export async function login(formData: FormData) {
     };
   }
 
-  const passwordMatch = await bcrypt.compare(
-    validPassword,
-    user.passwordHash
-  );
+  const passwordMatch = await bcrypt.compare(validPassword, user.passwordHash);
 
   if (!passwordMatch) {
     return {

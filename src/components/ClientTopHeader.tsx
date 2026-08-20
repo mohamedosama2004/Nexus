@@ -12,6 +12,7 @@ import {
   Cog6ToothIcon,
   ArrowLeftOnRectangleIcon,
 } from "@heroicons/react/24/outline";
+import { ThemeToggle } from "./ThemeToggle";
 
 type User = {
   id: string;
@@ -77,6 +78,9 @@ export function ClientTopHeader({ user }: { user: User }) {
       </button>
 
       <div className="flex items-center gap-2">
+        {/* Theme toggle */}
+        <ThemeToggle />
+
         {/* Notifications */}
         <button className="relative flex size-10 items-center justify-center rounded-lg border border-base-200 bg-base-100 text-base-content/60 transition-colors hover:bg-base-200 hover:text-base-content">
           <BellIcon className="h-5 w-5" />

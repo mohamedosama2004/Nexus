@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { ThemeToggle } from "@/src/components/ThemeToggle";
 
 const navLinks = [
   { label: "Product", href: "#features" },
   { label: "Solutions", href: "#collaboration" },
   { label: "Pricing", href: "/pricing" },
-  { label: "About", href: "/about" },
 ];
 
 export function MarketingNavbar() {
@@ -39,6 +39,7 @@ export function MarketingNavbar() {
 
         {/* Desktop actions */}
         <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle />
           <Link href="/login" className="btn btn-ghost btn-sm">
             Log in
           </Link>
@@ -48,25 +49,28 @@ export function MarketingNavbar() {
         </div>
 
         {/* Mobile toggle */}
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="btn btn-ghost btn-sm btn-square md:hidden"
-          aria-label="Toggle menu"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        <div className="flex items-center gap-1 md:hidden">
+          <ThemeToggle />
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="btn btn-ghost btn-sm btn-square"
+            aria-label="Toggle menu"
           >
-            {mobileOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            )}
-          </svg>
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              {mobileOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}

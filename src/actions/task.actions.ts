@@ -1,9 +1,12 @@
 "use server";
 
 import { taskSchema, updateTaskSchema } from "../schemas/task.schema";
+
 import { prisma } from "../lib/prisma";
+
 import { revalidatePath } from "next/cache";
 
+import { requireProjectPermission } from "../lib/authorization";
 
 export type TaskActionState = {
   success: boolean;
@@ -27,6 +30,18 @@ export async function createTask(
     return {
       success: false,
       error: result.error.issues[0].message,
+    };
+  }
+
+  const authorization = await requireProjectPermission(
+    result.data.projectId,
+    "CREATE_TASK",
+  );
+
+  if (!authorization.authorized) {
+    return {
+      success: false,
+      error: authorization.error,
     };
   }
 
@@ -84,6 +99,18 @@ export async function updateTask(
     };
   }
 
+  const authorization = await requireProjectPermission(
+    task.projectId,
+    "UPDATE_TASK",
+  );
+
+  if (!authorization.authorized) {
+    return {
+      success: false,
+      error: authorization.error,
+    };
+  }
+
   await prisma.task.update({
     where: {
       id: result.data.id,
@@ -108,6 +135,7 @@ export async function deleteTask(
   formData: FormData,
 ) {
   const id = formData.get("id");
+
   const projectId = formData.get("projectId");
 
   if (!id || typeof id !== "string") {
@@ -124,13 +152,15 @@ export async function deleteTask(
     };
   }
 
- const existing = await prisma.task.findUnique({
-  where: { id },
-  select: {
-    id: true,
-    projectId: true,
-  },
-});
+  const existing = await prisma.task.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      id: true,
+      projectId: true,
+    },
+  });
 
   if (!existing) {
     return {
@@ -139,11 +169,25 @@ export async function deleteTask(
     };
   }
 
+  const authorization = await requireProjectPermission(
+    existing.projectId,
+    "DELETE_TASK",
+  );
+
+  if (!authorization.authorized) {
+    return {
+      success: false,
+      error: authorization.error,
+    };
+  }
+
   await prisma.task.delete({
-    where: { id },
+    where: {
+      id,
+    },
   });
 
-  revalidatePath(`/projects/${projectId}`);
+  revalidatePath(`/projects/${existing.projectId}`);
 
   return {
     success: true,

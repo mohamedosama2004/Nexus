@@ -7,13 +7,27 @@ datasource db {
   provider = "postgresql"
 }
 
+
+enum Role {
+ADMIN
+MEMBER
+OWNER
+}
+
+enum ProjectRole {
+  OWNER
+  MEMBER
+}
+
+
+
 model User {
   id           String       @id @default(cuid())
   name         String
   email        String       @unique
   createdAt    DateTime     @default(now())
   passwordHash String
-
+  projectMemberships ProjectMember[]
   memberships Membership[]
   sessions    Session[]
 }
@@ -39,7 +53,7 @@ model Membership {
   id          String    @id @default(cuid())
   userId      String
   workspaceId String
-  role        String
+  role        Role
   user        User      @relation(fields: [userId], references: [id])
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
@@ -55,8 +69,22 @@ model Project {
   priority    String    @default("medium")
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
   tasks       Task[]
-
+  members ProjectMember[]
   @@index([workspaceId])
+}
+
+model ProjectMember {
+  id        String      @id @default(cuid())
+  userId    String
+  projectId String
+  role      ProjectRole
+
+  user      User        @relation(fields: [userId], references: [id])
+  project   Project     @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId])
+  @@index([userId])
+  @@index([projectId])
 }
 
 model Task {
