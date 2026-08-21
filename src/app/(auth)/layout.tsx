@@ -1,10 +1,16 @@
+import { getCurrentUser } from "@/src/lib/auth";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function AuthLayout({
+export default async function AuthLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getCurrentUser() ;
+  if(user){
+    redirect("/dashboard")
+  }
   return (
     <div className="hero min-h-screen bg-base-200">
       <div className="hero-content flex-col w-full max-w-md">
