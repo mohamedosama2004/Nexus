@@ -1,6 +1,6 @@
 import { FolderIcon } from "@heroicons/react/24/outline";
 import { getProjectsBySearch } from "@/src/lib/data/projectsSearch";
-import ProjectCard from "@/src/app/(application)/projects/_components/projectCard";
+import ProjectCard from "@/src/app/(protected)/projects/_components/projectCard";
 
 type Props = {
   query: string;
