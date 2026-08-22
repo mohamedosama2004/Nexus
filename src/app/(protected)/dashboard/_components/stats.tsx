@@ -8,7 +8,6 @@ import {
   FolderIcon,
   UsersIcon,
 } from "@heroicons/react/24/outline";
-import type { ReactNode } from "react";
 
 const statConfig = [
   { label: "Total Users", icon: UsersIcon, color: "text-blue-500", bg: "bg-blue-500/10" },

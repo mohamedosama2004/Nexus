@@ -88,6 +88,7 @@ export async function requireWorkspacePermission(
 
   return {
     authorized: true,
+    error: null,
     membership,
   };
 }
@@ -179,6 +180,7 @@ export async function requireProjectPermission(
 
   return {
     authorized: true,
+    error: null,
     projectMember,
   };
 }

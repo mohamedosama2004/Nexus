@@ -16,7 +16,7 @@ export type TaskActionState = {
 export async function createTask(
   prevState: TaskActionState,
   formData: FormData,
-) {
+): Promise<TaskActionState> {
   const data = {
     title: formData.get("title"),
     description: formData.get("description"),
@@ -65,7 +65,7 @@ export async function createTask(
 export async function updateTask(
   prevState: TaskActionState,
   formData: FormData,
-) {
+): Promise<TaskActionState> {
   const data = {
     id: formData.get("id"),
     title: formData.get("title"),
@@ -133,7 +133,7 @@ export async function updateTask(
 export async function deleteTask(
   prevState: TaskActionState,
   formData: FormData,
-) {
+): Promise<TaskActionState> {
   const id = formData.get("id");
 
   const projectId = formData.get("projectId");

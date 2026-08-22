@@ -17,7 +17,7 @@ export type ProjectActionState = {
 export async function createProject(
   prevState: ProjectActionState,
   formData: FormData,
-) {
+): Promise<ProjectActionState> {
   const data = {
     projectName: formData.get("projectName"),
     description: formData.get("description"),
@@ -108,14 +108,13 @@ export async function createProject(
   return {
     success: true,
     error: null,
-    projectId: resultTransaction.id,
   };
 }
 
 export async function updateProject(
   prevState: ProjectActionState,
   formData: FormData,
-) {
+): Promise<ProjectActionState> {
   const data = {
     id: formData.get("id"),
     projectName: formData.get("projectName"),
@@ -184,7 +183,7 @@ export async function updateProject(
 export async function deleteProject(
   prevState: ProjectActionState,
   formData: FormData,
-) {
+): Promise<ProjectActionState> {
   const id = formData.get("id");
 
   if (!id || typeof id !== "string") {
