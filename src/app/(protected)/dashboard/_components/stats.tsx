@@ -10,7 +10,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 const statConfig = [
-  { label: "Total Users", icon: UsersIcon, color: "text-blue-500", bg: "bg-blue-500/10" },
+  { label: "Total Workspace Members", icon: UsersIcon, color: "text-blue-500", bg: "bg-blue-500/10" },
   { label: "Projects", icon: FolderIcon, color: "text-emerald-500", bg: "bg-emerald-500/10" },
   { label: "Tasks", icon: CheckCircleIcon, color: "text-amber-500", bg: "bg-amber-500/10" },
   { label: "Attachments", icon: DocumentTextIcon, color: "text-purple-500", bg: "bg-purple-500/10" },

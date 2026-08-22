@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput } from "@/src/schemas/auth.schema";
-import { AuthInput } from "@/src/components/AuthInput";
+import { AuthInput } from "@/src/app/(auth)/_components/AuthInput";
 import { login } from "@/src/actions/auth.actions";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";

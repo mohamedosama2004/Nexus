@@ -1,37 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { logout } from "@/src/actions/auth.actions";
 import {
   HomeIcon,
-  ChartBarIcon,
   FolderIcon,
   Cog6ToothIcon,
-  ArrowLeftOnRectangleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  UsersIcon,
+  
 } from "@heroicons/react/24/outline";
 
 const links = [
   { label: "Dashboard", href: "/dashboard", icon: HomeIcon },
-  { label: "Analytics", href: "/dashboard/analytics", icon: ChartBarIcon },
+  { label: "Members", href: "/dashboard/members", icon: UsersIcon },
   { label: "Projects", href: "/projects", icon: FolderIcon },
   { label: "Settings", href: "/settings", icon: Cog6ToothIcon },
 ];
 
 export default function SideNavbar() {
   const pathname = usePathname();
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const handleLogout = async () => {
-    await logout();
-    router.push("/");
-    router.refresh();
-  };
 
   return (
     <>
@@ -108,17 +101,7 @@ export default function SideNavbar() {
           })}
         </nav>
 
-        {/* Logout */}
-        <div className="border-t border-base-200 p-3">
-          <button
-            onClick={handleLogout}
-            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-base-content/60 transition-colors hover:bg-error/10 hover:text-error ${!isOpen && "justify-center px-2"}`}
-            title={!isOpen ? "Log out" : undefined}
-          >
-            <ArrowLeftOnRectangleIcon className="h-5 w-5 shrink-0" />
-            {isOpen && <span>Log out</span>}
-          </button>
-        </div>
+       
       </aside>
     </>
   );

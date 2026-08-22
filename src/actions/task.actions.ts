@@ -7,11 +7,72 @@ import { prisma } from "../lib/prisma";
 import { revalidatePath } from "next/cache";
 
 import { requireProjectPermission } from "../lib/authorization";
+import { getCurrentUser } from "../lib/auth";
 
 export type TaskActionState = {
   success: boolean;
   error: string | null;
 };
+
+const TASK_STATUSES = ["TODO", "active", "completed"] as const;
+
+export async function setTaskStatus(
+  taskId: string,
+  status: string,
+): Promise<TaskActionState> {
+  if (!(TASK_STATUSES as readonly string[]).includes(status)) {
+    return {
+      success: false,
+      error: "Invalid task status.",
+    };
+  }
+
+  const currentUser = await getCurrentUser();
+
+  const task = await prisma.task.findUnique({
+    where: {
+      id: taskId,
+    },
+    select: {
+      projectId: true,
+    },
+  });
+
+  if (!currentUser || !task) {
+    return {
+      success: false,
+      error: "Task not found.",
+    };
+  }
+
+  const authorization = await requireProjectPermission(
+    task.projectId,
+    "UPDATE_TASK",
+  );
+
+  if (!authorization.authorized) {
+    return {
+      success: false,
+      error: authorization.error ?? "Unauthorized.",
+    };
+  }
+
+  await prisma.task.update({
+    where: {
+      id: taskId,
+    },
+    data: {
+      status,
+    },
+  });
+
+  revalidatePath(`/projects/${task.projectId}`);
+
+  return {
+    success: true,
+    error: null,
+  };
+}
 
 export async function createTask(
   prevState: TaskActionState,

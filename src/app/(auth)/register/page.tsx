@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterInput } from "@/src/schemas/auth.schema";
-import { AuthInput } from "@/src/components/AuthInput";
+import { AuthInput } from "@/src/app/(auth)/_components/AuthInput";
 import { register } from "@/src/actions/auth.actions";
 
 const RegisterPage = () => {

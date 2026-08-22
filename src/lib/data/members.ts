@@ -1,13 +1,38 @@
-import { User } from "../definitions";
+import { prisma } from "../prisma";
+import { getCurrentWorkspace } from "../current-workspace";
 
-const users: User[] = [
-  { id: 1, name: "Alex Morgan", email: "alex.morgan@example.com" },
-  { id: 2, name: "Jordan Lee", email: "jordan.lee@example.com" },
-  { id: 3, name: "Taylor Brooks", email: "taylor.brooks@example.com" },
-  { id: 4, name: "Casey Patel", email: "casey.patel@example.com" },
-  { id: 5, name: "Riley Chen", email: "riley.chen@example.com" },
-];
+export type WorkspaceMember = {
+  id: string;
+  name: string;
+  email: string;
+};
 
-export async function getUsers() {
-  return users;
+export async function getUsers(): Promise<WorkspaceMember[]> {
+  const currentWorkspace = await getCurrentWorkspace();
+
+  if (!currentWorkspace) {
+    return [];
+  }
+
+  const members = await prisma.membership.findMany({
+    where: {
+      workspaceId: currentWorkspace.workspace.id,
+    },
+    select: {
+      id: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  return members.map((member) => ({
+    id: member.user.id,
+    name: member.user.name,
+    email: member.user.email,
+  }));
 }

@@ -1,6 +1,12 @@
 "use client";
 
-import { useActionState, useCallback, useEffect, useRef, useState } from "react";
+import {
+  useActionState,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -8,7 +14,7 @@ import {
   createProject,
   type ProjectActionState,
 } from "@/src/actions/project.actions";
-import { SubmitButton } from "@/src/components/SubmitButton";
+import { SubmitButton } from "@/src/components/buttons/SubmitButton";
 import ProjectDescriptionTextarea from "./projectDescriptionTextarea";
 import ProjectNameInput from "./projectNameInput";
 import ProjectStatusSelect from "./projectStatusSelect";

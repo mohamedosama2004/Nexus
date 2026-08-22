@@ -1,13 +1,24 @@
 "use server";
 
-import { projectSchema, updateProjectSchema } from "../schemas/project.schema";
+import {
+  projectSchema,
+  updateProjectSchema,
+} from "../schemas/project.schema";
+
 import { prisma } from "../lib/prisma";
+
 import {
   requireProjectPermission,
 } from "../lib/authorization";
+
 import { ProjectRole } from "../generated/prisma/enums";
+
 import { cookies } from "next/headers";
+
 import { revalidatePath } from "next/cache";
+
+// ✅ NEW: Get the workspace selected by the current user
+import { getCurrentWorkspace } from "../lib/current-workspace";
 
 export type ProjectActionState = {
   success: boolean;
@@ -34,7 +45,9 @@ export async function createProject(
   }
 
   const cookieStore = await cookies();
-  const sessionToken = cookieStore.get("session_token")?.value;
+
+  const sessionToken =
+    cookieStore.get("session_token")?.value;
 
   if (!sessionToken) {
     return {
@@ -56,13 +69,21 @@ export async function createProject(
     };
   }
 
-  // Current workspace for the current Nexus flow.
-  const workspace = await prisma.workspace.findFirst();
+  // ❌ OLD:
+  // const workspace = await prisma.workspace.findFirst();
+  //
+  // This was wrong because it simply returned the first
+  // workspace in the database, not the workspace selected
+  // by the current user.
 
-  if (!workspace) {
+  // ✅ NEW:
+  // Get the workspace currently selected by the user.
+  const currentWorkspace = await getCurrentWorkspace();
+
+  if (!currentWorkspace) {
     return {
       success: false,
-      error: "No workspace found.",
+      error: "No current workspace found.",
     };
   }
 
@@ -70,7 +91,7 @@ export async function createProject(
     where: {
       userId_workspaceId: {
         userId: session.userId,
-        workspaceId: workspace.id,
+        workspaceId: currentWorkspace.workspace.id,
       },
     },
   });
@@ -82,26 +103,31 @@ export async function createProject(
     };
   }
 
-  const resultTransaction = await prisma.$transaction(async (tx) => {
-    const project = await tx.project.create({
-      data: {
-        title: result.data.projectName,
-        description: result.data.description,
-        status: result.data.status,
-        workspaceId: workspace.id,
-      },
-    });
+  const resultTransaction = await prisma.$transaction(
+    async (tx) => {
+      const project = await tx.project.create({
+        data: {
+          title: result.data.projectName,
+          description: result.data.description,
+          status: result.data.status,
 
-    await tx.projectMember.create({
-      data: {
-        userId: session.userId,
-        projectId: project.id,
-        role: ProjectRole.OWNER,
-      },
-    });
+          // ✅ NEW:
+          // Create the project inside the current workspace.
+          workspaceId: currentWorkspace.workspace.id,
+        },
+      });
 
-    return project;
-  });
+      await tx.projectMember.create({
+        data: {
+          userId: session.userId,
+          projectId: project.id,
+          role: ProjectRole.OWNER,
+        },
+      });
+
+      return project;
+    },
+  );
 
   revalidatePath("/projects");
 
