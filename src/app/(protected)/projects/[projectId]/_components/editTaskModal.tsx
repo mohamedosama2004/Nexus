@@ -11,7 +11,7 @@ import { PencilSquareIcon } from "@heroicons/react/24/outline";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { updateTask, type TaskActionState } from "@/src/actions/task.actions";
-import { SubmitButton } from "@/src/components/SubmitButton";
+import { SubmitButton } from "@/src/components/buttons/SubmitButton";
 import TaskDescriptionTextarea from "./taskDescriptionTextarea";
 import TaskStatusSelect from "./taskStatusSelect";
 import TaskTitleInput from "./taskTitleInput";

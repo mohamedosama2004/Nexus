@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { ThemeToggle } from "@/src/components/ThemeToggle";
+import { ThemeToggle } from "@/src/components/Themes/ThemeToggle";
 
 const navLinks = [
   { label: "Product", href: "#features" },
@@ -17,7 +17,10 @@ export function MarketingNavbar() {
     <header className="sticky top-0 z-50 border-b border-base-200 bg-base-100/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 text-xl font-bold tracking-tight text-base-content transition-opacity hover:opacity-80">
+        <Link
+          href="/"
+          className="flex items-center gap-2 text-xl font-bold tracking-tight text-base-content transition-opacity hover:opacity-80"
+        >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-black text-primary-content">
             N
           </div>
@@ -64,9 +67,19 @@ export function MarketingNavbar() {
               stroke="currentColor"
             >
               {mobileOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               )}
             </svg>
           </button>
@@ -89,10 +102,18 @@ export function MarketingNavbar() {
             ))}
           </nav>
           <div className="mt-3 flex flex-col gap-2">
-            <Link href="/login" onClick={() => setMobileOpen(false)} className="btn btn-ghost btn-sm w-full">
+            <Link
+              href="/login"
+              onClick={() => setMobileOpen(false)}
+              className="btn btn-ghost btn-sm w-full"
+            >
               Log in
             </Link>
-            <Link href="/register" onClick={() => setMobileOpen(false)} className="btn btn-primary btn-sm w-full">
+            <Link
+              href="/register"
+              onClick={() => setMobileOpen(false)}
+              className="btn btn-primary btn-sm w-full"
+            >
               Get started
             </Link>
           </div>

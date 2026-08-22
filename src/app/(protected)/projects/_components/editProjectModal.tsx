@@ -14,7 +14,7 @@ import {
   updateProject,
   type ProjectActionState,
 } from "@/src/actions/project.actions";
-import { SubmitButton } from "@/src/components/SubmitButton";
+import { SubmitButton } from "@/src/components/buttons/SubmitButton";
 import ProjectDescriptionTextarea from "./projectDescriptionTextarea";
 import ProjectNameInput from "./projectNameInput";
 import ProjectStatusSelect from "./projectStatusSelect";

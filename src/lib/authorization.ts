@@ -1,5 +1,7 @@
 import { cookies } from "next/headers";
+
 import { prisma } from "./prisma";
+
 import { ProjectRole, Role } from "../generated/prisma/enums";
 
 type workspacePermission =
@@ -8,7 +10,8 @@ type workspacePermission =
   | "DELETE_PROJECT"
   | "CREATE_TASK"
   | "UPDATE_TASK"
-  | "DELETE_TASK";
+  | "DELETE_TASK"
+  | "INVITE_MEMBER";
 
 const workspaceRolePermissions: Record<Role, workspacePermission[]> = {
   OWNER: [
@@ -18,6 +21,7 @@ const workspaceRolePermissions: Record<Role, workspacePermission[]> = {
     "CREATE_TASK",
     "UPDATE_TASK",
     "DELETE_TASK",
+    "INVITE_MEMBER",
   ],
 
   ADMIN: [
@@ -27,17 +31,22 @@ const workspaceRolePermissions: Record<Role, workspacePermission[]> = {
     "CREATE_TASK",
     "UPDATE_TASK",
     "DELETE_TASK",
+    "INVITE_MEMBER",
   ],
 
   MEMBER: ["CREATE_TASK", "UPDATE_TASK"],
 };
 
-function hasWorkspacePermission(role: Role, permission: workspacePermission) {
+function hasWorkspacePermission(
+  role: Role,
+  permission: workspacePermission
+) {
   return workspaceRolePermissions[role].includes(permission);
 }
+
 export async function requireWorkspacePermission(
   workspaceId: string,
-  permission: workspacePermission,
+  permission: workspacePermission
 ) {
   const cookieStore = await cookies();
 
@@ -102,7 +111,7 @@ type projectPermission =
   | "DELETE_TASK"
   | "MANAGE_PROJECT_MEMBERS";
 
-  const projectRolePermissions: Record<ProjectRole, projectPermission[]> = {
+const projectRolePermissions: Record<ProjectRole, projectPermission[]> = {
   OWNER: [
     "VIEW_PROJECT",
     "UPDATE_PROJECT",

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRightIcon } from "@heroicons/react/24/outline";
-import ProjectStatusBadge from "@/src/components/projectStatusBadge";
+import ProjectStatusBadge from "@/src/app/(protected)/projects/_components/projectStatusBadge";
 import DeleteProjectButton from "./deleteProjectButton";
 import EditProjectModal from "./editProjectModal";
 

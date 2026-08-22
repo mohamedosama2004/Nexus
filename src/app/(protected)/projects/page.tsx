@@ -1,6 +1,6 @@
 import { Suspense } from "react";
-import ProjectsList from "../../../components/projectsList";
-import SearchFilters from "../../../components/searchFilters";
+import ProjectsList from "./_components/projectsList";
+import SearchFilters from "./_components/searchFilters";
 import ProjectsLoadingSkeleton from "./loading";
 import CreateProjectModal from "./_components/createProjectModal";
 
