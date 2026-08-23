@@ -4,6 +4,7 @@ import {
   useActionState,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useRef,
   useState,
 } from "react";
@@ -15,12 +16,23 @@ import {
   type ProjectActionState,
 } from "@/src/actions/project.actions";
 
+export type DeleteProjectButtonHandle = {
+  open: (event: React.MouseEvent) => void;
+};
+
 type Props = {
   projectId: string;
   projectName: string;
+  hideTrigger?: boolean;
+  ref?: React.Ref<DeleteProjectButtonHandle>;
 };
 
-export default function DeleteProjectButton({ projectId, projectName }: Props) {
+export default function DeleteProjectButton({
+  projectId,
+  projectName,
+  hideTrigger = false,
+  ref,
+}: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const isClosingRef = useRef(false);
   const [modalClosing, setModalClosing] = useState(false);
@@ -70,16 +82,20 @@ export default function DeleteProjectButton({ projectId, projectName }: Props) {
     dialogRef.current?.showModal();
   }
 
+  useImperativeHandle(ref, () => ({ open: openModal }));
+
   return (
     <>
-      <button
-        className="btn btn-ghost btn-sm btn-square text-error"
-        onClick={openModal}
-        aria-label="Delete project"
-        type="button"
-      >
-        <TrashIcon className="size-4" />
-      </button>
+      {!hideTrigger && (
+        <button
+          className="btn btn-ghost btn-sm btn-square text-error"
+          onClick={openModal}
+          aria-label="Delete project"
+          type="button"
+        >
+          <TrashIcon className="size-4" />
+        </button>
+      )}
 
       <dialog
         ref={dialogRef}

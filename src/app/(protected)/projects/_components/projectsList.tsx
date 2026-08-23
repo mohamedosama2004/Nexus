@@ -1,13 +1,35 @@
 import { FolderIcon } from "@heroicons/react/24/outline";
-import { getProjectsBySearch } from "@/src/lib/data/projectsSearch";
-import ProjectCard from "@/src/app/(protected)/projects/_components/projectCard";
+
+import {
+  getProjectTaskStats,
+  getProjectsBySearch,
+} from "@/src/lib/data/projectsSearch";
+import type { ProjectStatus } from "@/src/lib/data/projects";
+import ProjectCard from "./projectCard";
+import ProjectListItem from "./projectListItem";
+import ProjectsPagination from "./projectsPagination";
 
 type Props = {
   query: string;
+  status?: ProjectStatus;
+  sort?: string;
+  view: "grid" | "list";
+  page: number;
 };
 
-export default async function ProjectsList({ query }: Props) {
-  const projects = await getProjectsBySearch(query);
+export default async function ProjectsList({
+  query,
+  status,
+  sort,
+  view,
+  page,
+}: Props) {
+  const [result, taskStats] = await Promise.all([
+    getProjectsBySearch({ query, status, sort, page }),
+    getProjectTaskStats(),
+  ]);
+
+  const { projects, totalCount, totalPages, currentPage, pageSize } = result;
 
   if (projects.length === 0) {
     return (
@@ -24,10 +46,35 @@ export default async function ProjectsList({ query }: Props) {
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {projects.map((project) => (
-        <ProjectCard key={project.id} project={project} />
-      ))}
+    <div className="space-y-5">
+      {view === "list" ? (
+        <div className="divide-y divide-base-200 overflow-hidden rounded-xl border border-base-200 bg-base-100 shadow-sm">
+          {projects.map((project) => (
+            <ProjectListItem
+              key={project.id}
+              project={project}
+              taskStats={taskStats.get(project.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {projects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              taskStats={taskStats.get(project.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      <ProjectsPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalCount}
+        pageSize={pageSize}
+      />
     </div>
   );
 }

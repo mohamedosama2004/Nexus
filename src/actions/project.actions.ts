@@ -1,15 +1,10 @@
 "use server";
 
-import {
-  projectSchema,
-  updateProjectSchema,
-} from "../schemas/project.schema";
+import { projectSchema, updateProjectSchema } from "../schemas/project.schema";
 
 import { prisma } from "../lib/prisma";
 
-import {
-  requireProjectPermission,
-} from "../lib/authorization";
+import { requireProjectPermission, requireWorkspacePermission } from "../lib/authorization";
 
 import { ProjectRole } from "../generated/prisma/enums";
 
@@ -33,6 +28,8 @@ export async function createProject(
     projectName: formData.get("projectName"),
     description: formData.get("description"),
     status: formData.get("status"),
+    startDate: formData.get("startDate"),
+    dueDate: formData.get("dueDate"),
   };
 
   const result = projectSchema.safeParse(data);
@@ -46,8 +43,7 @@ export async function createProject(
 
   const cookieStore = await cookies();
 
-  const sessionToken =
-    cookieStore.get("session_token")?.value;
+  const sessionToken = cookieStore.get("session_token")?.value;
 
   if (!sessionToken) {
     return {
@@ -87,47 +83,43 @@ export async function createProject(
     };
   }
 
-  const membership = await prisma.membership.findUnique({
-    where: {
-      userId_workspaceId: {
-        userId: session.userId,
-        workspaceId: currentWorkspace.workspace.id,
-      },
-    },
-  });
+ 
+  const authorization = await requireWorkspacePermission(
+    currentWorkspace.workspace.id,
+    "CREATE_PROJECT",
+  );
 
-  if (!membership) {
+  if (!authorization.authorized) {
     return {
       success: false,
-      error: "You are not a member of this workspace.",
+      error: authorization.error ?? "Unauthorized.",
     };
   }
 
-  const resultTransaction = await prisma.$transaction(
-    async (tx) => {
-      const project = await tx.project.create({
-        data: {
-          title: result.data.projectName,
-          description: result.data.description,
-          status: result.data.status,
+   await prisma.$transaction(async (tx) => {
+    const project = await tx.project.create({
+      data: {
+        title: result.data.projectName,
+        description: result.data.description,
+        status: result.data.status,
+        startDate: result.data.startDate,
+        dueDate: result.data.dueDate,
+        // ✅ NEW:
+        // Create the project inside the current workspace.
+        workspaceId: currentWorkspace.workspace.id,
+      },
+    });
 
-          // ✅ NEW:
-          // Create the project inside the current workspace.
-          workspaceId: currentWorkspace.workspace.id,
-        },
-      });
+    await tx.projectMember.create({
+      data: {
+        userId: session.userId,
+        projectId: project.id,
+        role: ProjectRole.OWNER,
+      },
+    });
 
-      await tx.projectMember.create({
-        data: {
-          userId: session.userId,
-          projectId: project.id,
-          role: ProjectRole.OWNER,
-        },
-      });
-
-      return project;
-    },
-  );
+    return project;
+  });
 
   revalidatePath("/projects");
 
@@ -146,6 +138,8 @@ export async function updateProject(
     projectName: formData.get("projectName"),
     description: formData.get("description"),
     status: formData.get("status"),
+    startDate: formData.get("startDate"),
+    dueDate: formData.get("dueDate"),
   };
 
   const result = updateProjectSchema.safeParse(data);
@@ -194,6 +188,8 @@ export async function updateProject(
       title: result.data.projectName,
       description: result.data.description,
       status: result.data.status,
+      startDate: result.data.startDate,
+      dueDate: result.data.dueDate,
     },
   });
 
