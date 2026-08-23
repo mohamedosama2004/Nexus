@@ -2,8 +2,14 @@
 import { cookies } from "next/headers";
 import bcrypt from "bcrypt";
 import { prisma } from "../lib/prisma";
-import { loginSchema, registerSchema } from "../schemas/auth.schema";
+import { loginSchema, registerSchema, emailOnlySchema } from "../schemas/auth.schema";
+import {
+  buildVerificationUrl,
+  createEmailVerificationToken,
+} from "../lib/email-verification";
+import { sendVerificationEmail } from "../lib/email";
 
+const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 
 export async function register(formData: FormData) {
   const name = formData.get("name");
@@ -71,25 +77,20 @@ export async function register(formData: FormData) {
     };
   });
 
-  const sessionToken = crypto.randomUUID();
+  const verificationToken =
+    await createEmailVerificationToken(resultTransaction.user.id);
 
-  await prisma.session.create({
-    data: {
-      userId: resultTransaction.user.id,
-      token: sessionToken,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-    },
-  });
-
-  const cookieStore = await cookies();
-
-  cookieStore.set("session_token", sessionToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-    path: "/",
-  });
+  try {
+    await sendVerificationEmail(
+      validEmail,
+      validName,
+      buildVerificationUrl(verificationToken),
+    );
+  } catch {
+    // Registration still succeeded; the user can request a new
+    // verification email. Never log the token itself.
+    console.error("Failed to send verification email after registration");
+  }
 
   return {
     success: true,
@@ -126,11 +127,26 @@ export async function login(formData: FormData) {
     };
   }
 
+  // Google-only account: no password has ever been set.
+  if (!user.passwordHash) {
+    return {
+      error: "Invalid email or password",
+    };
+  }
+
   const passwordMatch = await bcrypt.compare(validPassword, user.passwordHash);
 
   if (!passwordMatch) {
     return {
       error: "Invalid email or password",
+    };
+  }
+
+  if (!user.emailVerifiedAt) {
+    return {
+      error:
+        "Please verify your email address before signing in. Check your inbox for a verification link.",
+      needsVerification: true,
     };
   }
 
@@ -140,7 +156,7 @@ export async function login(formData: FormData) {
     data: {
       userId: user.id,
       token: sessionToken,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
     },
   });
 
@@ -150,13 +166,46 @@ export async function login(formData: FormData) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+    expires: new Date(Date.now() + SESSION_TTL_MS),
     path: "/",
   });
 
   return {
     success: true,
   };
+}
+
+export async function resendVerification(formData: FormData) {
+  const email = formData.get("email");
+
+  const result = emailOnlySchema.safeParse({ email });
+
+  if (!result.success) {
+    // Deliberately generic: do not reveal whether the email exists.
+    return { success: true };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email: result.data.email,
+    },
+  });
+
+  if (user && !user.emailVerifiedAt) {
+    const verificationToken = await createEmailVerificationToken(user.id);
+
+    try {
+      await sendVerificationEmail(
+        user.email,
+        user.name,
+        buildVerificationUrl(verificationToken),
+      );
+    } catch {
+      console.error("Failed to send verification email on resend");
+    }
+  }
+
+  return { success: true };
 }
 
 export async function logout() {

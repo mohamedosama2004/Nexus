@@ -32,16 +32,19 @@ enum NotificationType {
 }
 
 model User {
-  id           String       @id @default(cuid())
+  id           String    @id @default(cuid())
   name         String
-  email        String       @unique
-  createdAt    DateTime     @default(now())
-  passwordHash String
-
+  email        String    @unique
+  createdAt    DateTime  @default(now())
+  passwordHash String?
+  
+  emailVerifiedAt DateTime?
 
   projectMemberships ProjectMember[]
   memberships Membership[]
   sessions    Session[]
+  oauthAccounts          OAuthAccount[]
+  emailVerificationTokens EmailVerificationToken[]
 
   sentInvitations    Invitation[]   @relation("SentInvitations")
   receivedInvitations Invitation[]  @relation("ReceivedInvitations")
@@ -55,6 +58,40 @@ model Session {
   expiresAt DateTime
 
   user User @relation(fields: [userId], references: [id])
+}
+
+model EmailVerificationToken {
+  id         String    @id @default(cuid())
+  tokenHash  String    @unique
+  userId     String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model OAuthAccount {
+  id                String    @id @default(cuid())
+  userId            String
+  provider          String
+  providerAccountId String
+  
+  // Deliberately left null: we never persist OAuth credentials
+  // because identity is re-established on each login via code exchange.
+  accessToken       String?
+  refreshToken      String?
+  expiresAt         DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Workspace {
