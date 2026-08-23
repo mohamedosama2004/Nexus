@@ -4,14 +4,17 @@ import { useState } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { UserPlusIcon } from "@heroicons/react/24/outline";
+import type { WorkspaceMember } from "@/src/lib/data/members";
 import { InviteProjectMemberModal } from "./InviteProjectMemberModal";
 
 type InviteProjectMemberButtonProps = {
   projectId: string;
+  members: WorkspaceMember[];
 };
 
 export function InviteProjectMemberButton({
   projectId,
+  members,
 }: InviteProjectMemberButtonProps) {
   const [open, setOpen] = useState(false);
 
@@ -27,6 +30,7 @@ export function InviteProjectMemberButton({
 
       <InviteProjectMemberModal
         projectId={projectId}
+        members={members}
         open={open}
         onClose={() => setOpen(false)}
       />

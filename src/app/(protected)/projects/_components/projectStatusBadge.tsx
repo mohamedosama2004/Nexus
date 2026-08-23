@@ -1,6 +1,7 @@
 type Props = {
   status: string;
   outline?: boolean;
+  compact?: boolean;
 };
 
 export function projectStatusBadgeClass(status: string) {
@@ -16,12 +17,17 @@ export function projectStatusBadgeClass(status: string) {
   }
 }
 
-export default function ProjectStatusBadge({ status, outline }: Props) {
+export default function ProjectStatusBadge({
+  status,
+  outline,
+  compact,
+}: Props) {
   const badgeClass = projectStatusBadgeClass(status);
+  const sizeClass = compact ? "badge-sm" : "badge-lg";
 
   return (
     <span
-      className={`badge ${outline ? "badge-outline" : "badge-lg"} ${badgeClass}`}
+      className={`badge ${outline ? "badge-outline" : sizeClass} ${badgeClass}`}
     >
       {status}
     </span>

@@ -83,6 +83,8 @@ export async function createTask(
     description: formData.get("description"),
     status: formData.get("status"),
     projectId: formData.get("projectId"),
+    startDate: formData.get("startDate"),
+    dueDate: formData.get("dueDate"),
   };
 
   const result = taskSchema.safeParse(data);
@@ -112,6 +114,8 @@ export async function createTask(
       description: result.data.description,
       status: result.data.status,
       projectId: result.data.projectId,
+      startDate: result.data.startDate,
+      dueDate: result.data.dueDate,
     },
   });
 
@@ -133,6 +137,8 @@ export async function updateTask(
     description: formData.get("description"),
     status: formData.get("status"),
     projectId: formData.get("projectId"),
+    startDate: formData.get("startDate"),
+    dueDate: formData.get("dueDate"),
   };
 
   const result = updateTaskSchema.safeParse(data);
@@ -180,6 +186,8 @@ export async function updateTask(
       title: result.data.title,
       description: result.data.description,
       status: result.data.status,
+      startDate: result.data.startDate,
+      dueDate: result.data.dueDate,
     },
   });
 

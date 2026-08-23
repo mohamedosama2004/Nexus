@@ -87,6 +87,27 @@ export async function POST(
       },
     });
 
+    // 7.5 Only members of the project's workspace can be invited
+    if (!invitedUser) {
+      return apiError("User is not a member of this workspace.", 400);
+    }
+
+    const workspaceMembership = await prisma.membership.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId: invitedUser.id,
+          workspaceId: project.workspaceId,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!workspaceMembership) {
+      return apiError("User is not a member of this workspace.", 400);
+    }
+
     // 8. Check if the user is already a Project member
     if (invitedUser) {
       const existingMember =

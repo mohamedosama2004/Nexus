@@ -4,6 +4,7 @@ import {
   useActionState,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useRef,
   useState,
 } from "react";
@@ -19,11 +20,17 @@ import ProjectDescriptionTextarea from "./projectDescriptionTextarea";
 import ProjectNameInput from "./projectNameInput";
 import ProjectStatusSelect from "./projectStatusSelect";
 
+export type EditProjectModalHandle = {
+  open: (event: React.MouseEvent) => void;
+};
+
 type Props = {
   projectId: string;
   projectName: string;
   description: string | null;
   status: string;
+  hideTrigger?: boolean;
+  ref?: React.Ref<EditProjectModalHandle>;
 };
 
 export default function EditProjectModal({
@@ -31,6 +38,8 @@ export default function EditProjectModal({
   projectName,
   description,
   status,
+  hideTrigger = false,
+  ref,
 }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const isClosingRef = useRef(false);
@@ -83,16 +92,20 @@ export default function EditProjectModal({
     dialogRef.current?.showModal();
   }
 
+  useImperativeHandle(ref, () => ({ open: openModal }));
+
   return (
     <>
-      <button
-        className="btn btn-ghost btn-sm btn-square"
-        onClick={openModal}
-        aria-label="Edit project"
-        type="button"
-      >
-        <PencilSquareIcon className="size-4" />
-      </button>
+      {!hideTrigger && (
+        <button
+          className="btn btn-ghost btn-sm btn-square"
+          onClick={openModal}
+          aria-label="Edit project"
+          type="button"
+        >
+          <PencilSquareIcon className="size-4" />
+        </button>
+      )}
 
       <dialog
         ref={dialogRef}

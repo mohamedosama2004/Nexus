@@ -7,11 +7,17 @@ import {
   HomeIcon,
   FolderIcon,
   Cog6ToothIcon,
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   UsersIcon,
   
 } from "@heroicons/react/24/outline";
+
+type SidebarProject = {
+  id: string;
+  title: string;
+};
 
 const links = [
   { label: "Dashboard", href: "/dashboard", icon: HomeIcon },
@@ -20,10 +26,17 @@ const links = [
   { label: "Settings", href: "/settings", icon: Cog6ToothIcon },
 ];
 
-export default function SideNavbar() {
+export default function SideNavbar({
+  projects = [],
+}: {
+  projects?: SidebarProject[];
+}) {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isProjectsExpanded, setIsProjectsExpanded] = useState(
+    () => pathname.startsWith("/projects/")
+  );
 
 
   return (
@@ -82,21 +95,82 @@ export default function SideNavbar() {
           {links.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href;
+            const isProjectsItem = link.href === "/projects";
             return (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                title={!isOpen ? link.label : undefined}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : "text-base-content/60 hover:bg-base-200 hover:text-base-content"
-                } ${!isOpen && "justify-center px-2"}`}
-              >
-                <Icon className={`h-5 w-5 shrink-0 ${isActive ? "text-primary" : ""}`} />
-                {isOpen && <span>{link.label}</span>}
-              </Link>
+              <div key={link.href}>
+                <div
+                  className={
+                    isProjectsItem && isOpen ? "flex items-center gap-1" : undefined
+                  }
+                >
+                  <Link
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    title={!isOpen ? link.label : undefined}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-base-content/60 hover:bg-base-200 hover:text-base-content"
+                    } ${!isOpen && "justify-center px-2"} ${
+                      isProjectsItem && isOpen && "min-w-0 flex-1"
+                    }`}
+                  >
+                    <Icon className={`h-5 w-5 shrink-0 ${isActive ? "text-primary" : ""}`} />
+                    {isOpen && <span>{link.label}</span>}
+                  </Link>
+                  {isProjectsItem && isOpen && (
+                    <button
+                      type="button"
+                      onClick={() => setIsProjectsExpanded((prev) => !prev)}
+                      aria-expanded={isProjectsExpanded}
+                      aria-label={isProjectsExpanded ? "Collapse projects" : "Expand projects"}
+                      className="rounded-md p-1.5 text-base-content/40 transition-colors hover:bg-base-200 hover:text-base-content"
+                    >
+                      <ChevronDownIcon
+                        className={`h-4 w-4 transition-transform duration-200 ${
+                          isProjectsExpanded ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+                  )}
+                </div>
+
+                {isProjectsItem && (
+                  <div
+                    className={`grid transition-all duration-200 ease-out ${
+                      isProjectsExpanded && isOpen
+                        ? "grid-rows-[1fr] opacity-100"
+                        : "grid-rows-[0fr] opacity-0"
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      {isProjectsExpanded && isOpen && projects.length > 0 && (
+                        <ul className="ml-[26px] mt-0.5 max-h-64 space-y-0.5 overflow-y-auto border-l border-base-200 pb-1 pl-2 pr-1">
+                          {projects.map((project) => {
+                            const projectHref = `/projects/${project.id}`;
+                            const isProjectActive = pathname === projectHref;
+                            return (
+                              <li key={project.id}>
+                                <Link
+                                  href={projectHref}
+                                  onClick={() => setMobileOpen(false)}
+                                  className={`block truncate rounded-md px-2 py-1.5 text-sm transition-colors ${
+                                    isProjectActive
+                                      ? "bg-primary/5 font-medium text-primary"
+                                      : "text-base-content/60 hover:bg-base-200 hover:text-base-content"
+                                  }`}
+                                >
+                                  {project.title}
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>

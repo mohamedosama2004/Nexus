@@ -13,6 +13,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { createTask, type TaskActionState } from "@/src/actions/task.actions";
 import { SubmitButton } from "@/src/components/buttons/SubmitButton";
 import TaskDescriptionTextarea from "./taskDescriptionTextarea";
+import TaskDueDateInput from "./taskDueDateInput";
+import TaskStartDateInput from "./taskStartDateInput";
 import TaskStatusSelect from "./taskStatusSelect";
 import TaskTitleInput from "./taskTitleInput";
 
@@ -108,6 +110,10 @@ export default function CreateTaskModal({ projectId }: Props) {
             <TaskTitleInput error={state.error} />
             <TaskDescriptionTextarea />
             <TaskStatusSelect />
+            <div className="grid grid-cols-2 gap-4">
+              <TaskStartDateInput />
+              <TaskDueDateInput />
+            </div>
 
             <div className="modal-action">
               <button type="button" className="btn" onClick={closeModal}>

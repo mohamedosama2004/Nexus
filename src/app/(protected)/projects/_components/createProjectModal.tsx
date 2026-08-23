@@ -16,7 +16,9 @@ import {
 } from "@/src/actions/project.actions";
 import { SubmitButton } from "@/src/components/buttons/SubmitButton";
 import ProjectDescriptionTextarea from "./projectDescriptionTextarea";
+import ProjectDueDateInput from "./projectDueDateInput";
 import ProjectNameInput from "./projectNameInput";
+import ProjectStartDateInput from "./projectStartDateInput";
 import ProjectStatusSelect from "./projectStatusSelect";
 
 export default function CreateProjectModal() {
@@ -105,6 +107,10 @@ export default function CreateProjectModal() {
             <ProjectNameInput error={state.error} />
             <ProjectDescriptionTextarea />
             <ProjectStatusSelect />
+            <div className="grid grid-cols-2 gap-4">
+              <ProjectStartDateInput />
+              <ProjectDueDateInput />
+            </div>
 
             <div className="modal-action">
               <button type="button" className="btn" onClick={closeModal}>
