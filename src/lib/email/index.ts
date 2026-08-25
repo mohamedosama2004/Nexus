@@ -1,6 +1,12 @@
 import { Resend } from "resend";
 
-import { verificationEmailHtml } from "./templates";
+import {
+  projectInvitationEmailHtml,
+  verificationEmailHtml,
+  workspaceInvitationEmailHtml,
+} from "./templates";
+
+import { getAppUrl } from "../email-verification";
 
 const EMAIL_FROM = process.env.EMAIL_FROM ?? "Nexus <onboarding@resend.dev>";
 
@@ -77,6 +83,54 @@ export async function sendVerificationEmail(
       "",
       "This link expires in 24 hours and can only be used once.",
       "If you didn't create a Nexus account, you can safely ignore this email.",
+    ].join("\n"),
+  });
+}
+
+export function buildInvitationUrl(invitationId: string) {
+  return `${getAppUrl()}/invitations/${invitationId}`;
+}
+
+export async function sendWorkspaceInvitationEmail(
+  to: string,
+  inviterName: string,
+  workspaceName: string,
+  invitationUrl: string,
+) {
+  return sendEmail({
+    to,
+    subject: `${inviterName || "Someone"} invited you to join ${workspaceName} on Nexus`,
+    html: workspaceInvitationEmailHtml(inviterName, workspaceName, invitationUrl),
+    text: [
+      `${inviterName || "Someone"} has invited you to join the "${workspaceName}" workspace on Nexus.`,
+      "",
+      "Open this link to view the invitation:",
+      invitationUrl,
+      "",
+      "This link expires in 7 days.",
+      "If you weren't expecting this invitation, you can safely ignore this email.",
+    ].join("\n"),
+  });
+}
+
+export async function sendProjectInvitationEmail(
+  to: string,
+  inviterName: string,
+  projectName: string,
+  invitationUrl: string,
+) {
+  return sendEmail({
+    to,
+    subject: `${inviterName || "Someone"} invited you to the project "${projectName}" on Nexus`,
+    html: projectInvitationEmailHtml(inviterName, projectName, invitationUrl),
+    text: [
+      `${inviterName || "Someone"} has invited you to join the project "${projectName}" on Nexus.`,
+      "",
+      "Open this link to view the invitation:",
+      invitationUrl,
+      "",
+      "This link expires in 7 days.",
+      "If you weren't expecting this invitation, you can safely ignore this email.",
     ].join("\n"),
   });
 }

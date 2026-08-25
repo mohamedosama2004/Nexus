@@ -5,6 +5,10 @@ import { prisma } from "@/src/lib/prisma";
 import { getCurrentUser } from "@/src/lib/auth";
 import { requireProjectPermission } from "@/src/lib/authorization";
 import { apiError } from "@/src/lib/api-response";
+import {
+  buildInvitationUrl,
+  sendProjectInvitationEmail,
+} from "@/src/lib/email";
 
 import { createProjectInvitationSchema } from "../../../../../schemas/project-invitations.schema";
 
@@ -192,6 +196,20 @@ export async function POST(
           invitationId: invitation.id,
         },
       });
+    }
+
+    // 13.5 Send invitation email
+    try {
+      await sendProjectInvitationEmail(
+        email,
+        currentUser.name,
+        project.title,
+        buildInvitationUrl(invitation.id),
+      );
+    } catch {
+      // The invitation itself still succeeded and the invitee
+      // received an in-app notification. Never log the token.
+      console.error("Failed to send project invitation email");
     }
 
     // 14. Success response

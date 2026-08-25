@@ -7,6 +7,10 @@ import { requireWorkspacePermission } from "../../../lib/authorization";
 import { apiError } from "../../../lib/api-response";
 import { getCurrentWorkspace } from "../../../lib/current-workspace";
 import { createInvitationSchema } from "../../../schemas/invitation";
+import {
+  buildInvitationUrl,
+  sendWorkspaceInvitationEmail,
+} from "../../../lib/email";
 
 export async function POST(request: Request) {
   try {
@@ -158,7 +162,30 @@ export async function POST(request: Request) {
       }
     );
 
-    // 10. Success response
+    // 10. Send invitation email
+    const workspace = await prisma.workspace.findUnique({
+      where: {
+        id: workspaceId,
+      },
+      select: {
+        name: true,
+      },
+    });
+
+    try {
+      await sendWorkspaceInvitationEmail(
+        email,
+        currentUser.name,
+        workspace?.name ?? "a workspace",
+        buildInvitationUrl(transactionResult.invitation.id)
+      );
+    } catch {
+      // The invitation itself still succeeded and the invitee
+      // received an in-app notification. Never log the token.
+      console.error("Failed to send workspace invitation email");
+    }
+
+    // 11. Success response
     return NextResponse.json(
       {
         id: transactionResult .invitation.id,
