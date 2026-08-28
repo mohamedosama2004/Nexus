@@ -201,7 +201,7 @@ export async function POST(
     // 13.5 Send invitation email
     try {
       await sendProjectInvitationEmail(
-        email,
+        invitedUser.email,
         currentUser.name,
         project.title,
         buildInvitationUrl(invitation.id),

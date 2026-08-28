@@ -1,4 +1,5 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 
 import {
   projectInvitationEmailHtml,
@@ -8,13 +9,29 @@ import {
 
 import { getAppUrl } from "../email-verification";
 
-const EMAIL_FROM = process.env.EMAIL_FROM ?? "Nexus <onboarding@resend.dev>";
+const EMAIL_FROM =
+  process.env.EMAIL_FROM ?? "Nexus <no-reply@nexus.app>";
 
-let resendClient: Resend | null = null;
+let transporter: Transporter | null = null;
 
-function getResendClient(apiKey: string) {
-  resendClient ??= new Resend(apiKey);
-  return resendClient;
+function getTransporter() {
+  if (transporter) {
+    return transporter;
+  }
+
+  // Gmail SMTP + App Password. SMTP_PASS is a Gmail App Password,
+  // not the account's normal password.
+  transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
+  return transporter;
 }
 
 type SendEmailOptions = {
@@ -25,19 +42,20 @@ type SendEmailOptions = {
 };
 
 export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
-  const apiKey = process.env.RESEND_API_KEY;
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
 
-  if (!apiKey) {
+  if (!smtpUser || !smtpPass) {
     if (process.env.NODE_ENV === "production") {
       throw new Error(
-        "RESEND_API_KEY is required in production to send emails",
+        "SMTP credentials (SMTP_USER/SMTP_PASS) are required in production to send emails",
       );
     }
 
     // Local development fallback (no provider configured):
     // print the email content instead of failing silently.
     console.info(
-      `[email:dev] Skipped sending "${subject}" to ${to} — no RESEND_API_KEY set.`,
+      `[email:dev] Skipped sending "${subject}" to ${to} — no SMTP credentials set.`,
     );
 
     if (text) {
@@ -46,12 +64,12 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
       console.debug("[email:dev] Body:\n", html);
     }
 
-    return { id: "dev-fallback" };
+    return { messageId: "dev-fallback" };
   }
 
-  const client = getResendClient(apiKey);
+  const client = getTransporter();
 
-  const { data, error } = await client.emails.send({
+  const info = await client.sendMail({
     from: EMAIL_FROM,
     to,
     subject,
@@ -59,11 +77,7 @@ export async function sendEmail({ to, subject, html, text }: SendEmailOptions) {
     ...(text !== undefined && { text }),
   });
 
-  if (error) {
-    throw new Error(`Email delivery failed: ${error.message}`);
-  }
-
-  return data;
+  return { messageId: info.messageId };
 }
 
 export async function sendVerificationEmail(

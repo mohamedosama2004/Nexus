@@ -174,7 +174,7 @@ export async function POST(request: Request) {
 
     try {
       await sendWorkspaceInvitationEmail(
-        email,
+        invitedUser?.email ?? email,
         currentUser.name,
         workspace?.name ?? "a workspace",
         buildInvitationUrl(transactionResult.invitation.id)
