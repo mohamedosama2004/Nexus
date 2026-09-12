@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { getCurrentUser } from "@/src/lib/auth";
 import AvatarUploadForm from "./_components/AvatarUploadForm";
+
+export const metadata: Metadata = {
+  title: "Profile",
+  description: "Manage your Nexus profile photo and account information.",
+};
 
 export default async function ProfilePage() {
   const user = await getCurrentUser();

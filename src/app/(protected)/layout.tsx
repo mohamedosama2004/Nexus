@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import SideNavbar from "@/src/components/Navs/SideNavbar";
 import { TopHeader } from "@/src/app/(protected)/dashboard/_components/TopHeader";
 import { getCurrentUser } from "@/src/lib/auth";
 import { getProjects } from "@/src/lib/data/projects";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function DashboardLayout({
   children,

@@ -1,3 +1,6 @@
+import type { Metadata } from "next";
+
+import { siteConfig } from "@/src/lib/site";
 import { HeroSection } from "./components/HeroSection";
 import { LogoCloud } from "./components/LogoCloud";
 import { FeaturesSection } from "./components/FeaturesSection";
@@ -7,6 +10,16 @@ import { WorkflowSection } from "./components/WorkflowSection";
 import { TestimonialSection } from "./components/TestimonialSection";
 import { CTASection } from "./components/CTASection";
 import { ScrollReveal } from "./components/ScrollReveal";
+
+export const metadata: Metadata = {
+  title: {
+    absolute: siteConfig.name,
+  },
+  description: siteConfig.description,
+  alternates: {
+    canonical: "/",
+  },
+};
 
 export default function MarketingPage() {
   return (

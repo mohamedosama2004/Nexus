@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { prisma } from "@/src/lib/prisma";
 import { getCurrentUser } from "@/src/lib/auth";
 
 import { InvitationResponse } from "./_components/InvitationResponse";
+
+export const metadata: Metadata = {
+  title: "Invitation",
+  description: "Respond to a workspace or project invitation.",
+};
 
 type InvitationPageProps = {
   params: Promise<{ id: string }>;

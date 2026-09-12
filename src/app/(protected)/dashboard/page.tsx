@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import Activity from "./_components/activity";
 import DashboardHeader from "./_components/header";
 import Projects from "./_components/projects";
@@ -8,6 +10,11 @@ import ActivitySkeleton from "@/src/components/skeletons/dashboard/activitySkele
 import ProjectsSkeleton from "@/src/components/skeletons/dashboard/projectsSkeleton";
 import StatsSkeleton from "@/src/components/skeletons/dashboard/statsSkeleton";
 import TasksSkeleton from "@/src/components/skeletons/dashboard/tasksSkeleton";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description: "An overview of your projects, tasks, and team activity in Nexus.",
+};
 
 export default async function DashboardPage() {
   return (
