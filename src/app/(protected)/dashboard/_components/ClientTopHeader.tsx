@@ -9,6 +9,7 @@ type User = {
   id: string;
   name: string;
   email: string;
+  avatarFile: { storageKey: string } | null;
 } | null;
 
 export function ClientTopHeader({ user }: { user: User }) {

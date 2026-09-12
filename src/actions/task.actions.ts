@@ -8,6 +8,16 @@ import { revalidatePath } from "next/cache";
 
 import { requireProjectPermission } from "../lib/authorization";
 import { getCurrentUser } from "../lib/auth";
+import {
+  fileValidationErrors,
+  validateFile,
+} from "../lib/files/validate-file";
+import { uploadPolicies } from "../lib/files/upload-policies";
+import {
+  buildStorageKey,
+  getStorage,
+  sanitizeFilename,
+} from "../lib/files/storage";
 
 export type TaskActionState = {
   success: boolean;
@@ -257,6 +267,152 @@ export async function deleteTask(
   });
 
   revalidatePath(`/projects/${existing.projectId}`);
+
+  return {
+    success: true,
+    error: null,
+  };
+}
+
+export type UploadAttachmentActionState = {
+  success: boolean;
+  error: string | null;
+};
+
+/**
+ * Attaches a file to a task.
+ *
+ * Flow: authenticate → authorize against the task's project → validate →
+ * store bytes → persist metadata → revalidate the project page.
+ *
+ * Attachments are metadata rows pointing at stored bytes; the task itself is
+ * never modified here, so this action requires only `UPDATE_TASK`.
+ */
+export async function uploadTaskAttachment(
+  prevState: UploadAttachmentActionState,
+  formData: FormData,
+): Promise<UploadAttachmentActionState> {
+  // 1. Task reference
+  const taskId = formData.get("taskId");
+
+  if (typeof taskId !== "string" || taskId.length === 0) {
+    return {
+      success: false,
+      error: "Task ID is required.",
+    };
+  }
+
+  // 2. Authentication
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    return {
+      success: false,
+      error: "You must be logged in.",
+    };
+  }
+
+  // 3. Authorization against the task's project
+  const task = await prisma.task.findUnique({
+    where: {
+      id: taskId,
+    },
+    select: {
+      projectId: true,
+    },
+  });
+
+  if (!task) {
+    return {
+      success: false,
+      error: "Task not found.",
+    };
+  }
+
+  const authorization = await requireProjectPermission(
+    task.projectId,
+    "UPDATE_TASK",
+  );
+
+  if (!authorization.authorized) {
+    return {
+      success: false,
+      error: authorization.error,
+    };
+  }
+
+  // 4. Validate against the attachment policy
+  const validation = validateFile(
+    formData.get("file"),
+    uploadPolicies.attachment,
+  );
+
+  if (!validation.ok) {
+    return {
+      success: false,
+      error: fileValidationErrors[validation.error],
+    };
+  }
+
+  const file = validation.file;
+
+  // 5. Derive a safe key + display name
+  const storageKey = buildStorageKey("attachment", file.type);
+  const originalName = sanitizeFilename(file.name);
+
+  let bytes: Buffer;
+
+  try {
+    bytes = Buffer.from(await file.arrayBuffer());
+  } catch (error) {
+    console.error("Failed to read uploaded attachment:", error);
+    return {
+      success: false,
+      error: "Could not read the selected file.",
+    };
+  }
+
+  // 6. Store the bytes
+  try {
+    await getStorage().save(storageKey, bytes);
+  } catch (error) {
+    console.error("Failed to store attachment:", error);
+    return {
+      success: false,
+      error: "Could not save the uploaded file.",
+    };
+  }
+
+  // 7. Persist metadata
+  try {
+    await prisma.fileRecord.create({
+      data: {
+        originalName,
+        mimeType: file.type,
+        size: file.size,
+        storageKey,
+        category: "ATTACHMENT",
+        uploadedById: currentUser.id,
+        taskId,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to persist attachment metadata:", error);
+
+    try {
+      await getStorage().delete(storageKey);
+    } catch (cleanupError) {
+      console.error("Failed to clean up attachment bytes:", cleanupError);
+    }
+
+    return {
+      success: false,
+      error: "Could not save the attachment.",
+    };
+  }
+
+  // 8. Revalidate the project page so the new attachment shows up on the board
+  revalidatePath(`/projects/${task.projectId}`);
 
   return {
     success: true,

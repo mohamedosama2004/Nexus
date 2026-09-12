@@ -3,6 +3,7 @@
 import { useDraggable } from "@dnd-kit/core";
 import EditTaskModal from "../editTaskModal";
 import DeleteTaskButton from "../deleteTaskButton";
+import TaskAttachmentModal from "../TaskAttachmentModal";
 import { TaskCardBody } from "./TaskCardBody";
 import type { ProjectTask } from "../types";
 
@@ -38,6 +39,10 @@ export function BoardCard({ task, projectId, done }: BoardCardProps) {
             #{task.id.slice(-6)}
           </span>
           <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+            <TaskAttachmentModal
+              taskId={task.id}
+              attachments={task.attachments}
+            />
             <EditTaskModal
               projectId={projectId}
               taskId={task.id}

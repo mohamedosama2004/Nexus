@@ -31,6 +31,11 @@ enum NotificationType {
   INVITATION
 }
 
+enum FileCategory {
+  AVATAR
+  ATTACHMENT
+}
+
 model User {
   id           String    @id @default(cuid())
   name         String
@@ -49,6 +54,10 @@ model User {
   sentInvitations    Invitation[]   @relation("SentInvitations")
   receivedInvitations Invitation[]  @relation("ReceivedInvitations")
   notifications      Notification[]
+
+  avatarFileId String?       @unique
+  avatarFile   FileRecord?   @relation("AvatarFile", fields: [avatarFileId], references: [id], onDelete: SetNull)
+  uploadedFiles FileRecord[] @relation("UploadedFiles")
 }
 
 model Session {
@@ -164,7 +173,29 @@ model Task {
 
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  attachments FileRecord[]
+
   @@index([projectId])
+}
+
+model FileRecord {
+  id           String       @id @default(cuid())
+  originalName String
+  mimeType     String
+  size         Int
+  storageKey   String       @unique
+  category     FileCategory @default(ATTACHMENT)
+  uploadedById String
+  taskId       String?
+  createdAt    DateTime     @default(now())
+
+  uploadedBy   User         @relation("UploadedFiles", fields: [uploadedById], references: [id])
+  avatarFor    User?        @relation("AvatarFile")
+  task         Task?        @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([uploadedById])
+  @@index([taskId])
+  @@index([category])
 }
 
 
