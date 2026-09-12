@@ -103,6 +103,11 @@ const PROJECT_INCLUDE = {
         select: {
           id: true,
           name: true,
+          avatarFile: {
+            select: {
+              storageKey: true,
+            },
+          },
         },
       },
     },
@@ -259,6 +264,11 @@ export async function getProjectById(projectId: string) {
             select: {
               id: true,
               name: true,
+              avatarFile: {
+                select: {
+                  storageKey: true,
+                },
+              },
             },
           },
         },

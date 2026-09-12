@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { UserPlusIcon } from "@heroicons/react/24/outline";
 import type { WorkspaceMember } from "@/src/lib/data/members";
 import { InviteProjectMemberModal } from "./InviteProjectMemberModal";
@@ -34,9 +32,6 @@ export function InviteProjectMemberButton({
         open={open}
         onClose={() => setOpen(false)}
       />
-
-      {/* Stays mounted so toasts survive the modal closing */}
-      <ToastContainer position="top-right" autoClose={3000} />
     </>
   );
 }

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 import QueryProvider from "../providers/query-provider";
 import { ThemeScript } from "../components/Themes/ThemeScript";
@@ -34,6 +36,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-base-100 text-base-content">
         <ThemeScript />
         <QueryProvider>{children}</QueryProvider>
+        <ToastContainer position="top-right" />
       </body>
     </html>
   );

@@ -278,7 +278,7 @@ Why `migrate dev` was not used for the final migration: it refused to run non-in
 - **No presigned/direct-to-storage uploads** — bytes pass through the Next.js server (correct for this stage; note a large-file/`serverActions.bodySizeLimit` ceiling exists, avatar/attachment policies are far below it).
 - **No CDN and no signed download URLs** — files stream through `/api/files`, cached privately for 1h per request.
 - **No attachment deletion UI** — upload + list + open is implemented; deleting/replacing attachments beyond the avatar-replacement path is left for a later lesson.
-- **Pre-existing, untouched**: `getCurrentUser()` serializes the full `User` row (incl. `passwordHash`) into the header client payload; `src/lib/data/attachments.ts` still feeds placeholder dashboard mock data. Both are out of Lesson 25 scope.
+- **Pre-existing**: `getCurrentUser()` serializes the full `User` row (incl. `passwordHash`) into the header client payload — out of Lesson 25 scope. *(The dashboard-attachments placeholder limitation below was resolved in the Lesson 25 follow-up; see **Section P**.)*
 - **Development restart required after `prisma generate`** — the previously running dev server held a stale generated client (it 500'd on the new routes), so it was restarted (see note in report footer).
 
 ## N. Future Extension
@@ -309,3 +309,105 @@ Why `migrate dev` was not used for the final migration: it refused to run non-in
 ---
 
 Report scope note (operations): the running `next dev` server on port 3000 was **restarted** during verification because it had been started before `prisma generate` and served a stale Prisma client that errored on the new models/routes. A fresh `next dev` is running. The migrated schema is otherwise unchanged, and all temporary test rows/files created for verification were removed afterwards.
+
+---
+
+## P. Lesson 25 Follow-up — Avatar UX, Member Avatars & Real Dashboard Attachments
+
+Follow-up work on top of Lesson 25 (branch `main`, PR #18 merged). No schema change was required.
+
+### P.1 Profile Changes
+
+- **`dashboard/profile/page.tsx`** redesigned from the minimal stub into a real profile screen: page header ("My Profile"), a centered avatar card (large preview + upload form), and an "Account information" card rendered as responsive `<dl>` rows (Full name, Email, Role in workspace, Member since formatted long-form).
+- **`AvatarUploadForm.tsx`** rewritten:
+  - Split into a parent (runs the server action via `useActionState`, renders the toast + `WaitingToast`/`ToastContainer`) and a keyed child `ProfileAvatarPicker` (the `<input>` + preview + error/hint wiring), keyed by `avatarFile?.storageKey ?? "none"` so the key remount clears any stale file selection after a successful upload.
+  - **Dynamic submit label**: `hasAvatar ? "Change avatar" : "Upload avatar"` — the user asked the button to reflect the state (Upload **or** Change) instead of always saying "Upload".
+  - Selected-file **preview** before submit via `URL.createObjectURL` (with a "New photo — not saved yet" badge and a **Cancel selection** button restoring the current avatar), cleanup of revoked object URLs, `aria-describedby` error/hint wiring, and a `SubmitButton label` prop to emit the dynamic text.
+  - Avoids `react-hooks/set-state-in-effect`: no setState inside effects — the remount-on-key pattern (the repo's established workaround, cf. `editTaskModal`) clears stale state instead.
+
+### P.2 Project Member Changes
+
+- **Member avatars now render across the app** instead of generic initials:
+  - **Project board header / project cards / project list** — `projectMembersStack.tsx` renders each member via the shared avatar component: a real image when the member has `avatarFile`, otherwise a first-letter fallback (previously initials for every member).
+  - **Top-right user dropdown** — `UserProfileDropdown.tsx` uses the same component (its 2-letter fallback kept via `fallback="initials"`).
+  - **`/dashboard/members` page** — `MemberCard` now shows each member's **own avatar** when one exists (requested directly); the `GET /api/workspaces/current/members` route and the `Member` type were extended with `avatarFile.storageKey`, and the card falls back to initials when the member has none.
+  - **Invite-project-member modal** — the "Workspace member" picker (`InviteProjectMemberModal.tsx`) shows each invitable member's own avatar via the shared component (single-letter fallback kept), replacing the initials placeholder.
+- Data sources (no N+1): `PROJECT_INCLUDE` + `getProjectById` select `avatarFile: { select: { storageKey: true } }` inside the existing member `user` include; `getUsers()`/`WorkspaceMember` include `avatarFile` for the invite modal; the members API selects it in one `findMany`. All member rows share the single query each flow already made.
+
+### P.3 Reusable Components
+
+- **New `src/components/UserAvatar.tsx`** — a presentation-only, directive-free component (usable in both server and client trees): props `name`, `storageKey: string | null`, `alt`, `title`, `className`, `textClassName`, `fallback: "initial" | "initials"`. Renders `<img src="/api/files/<storageKey>">` when a key exists, else the first (or first-two) letters of `name`. It performs **no** DB/auth/upload work, keeps filesystem paths off the client, and follows the repo convention of plain `<img>` (Nexus doesn't use `next/image`; avatar bytes are authenticated, so static optimization is not applicable).
+- Used in 5 places: board header/cards (`projectMembersStack`), header dropdown, profile avatar card, dashboard Team Members card / member rows, and the invite modal.
+
+### P.4 Database Changes
+
+- **None.** The follow-up reuses `FileRecord`, `FileCategory`, `User.avatarFile`, and the `/api/files/[...key]` route from Lesson 25. `prisma migrate status` remains "up to date" (12 migrations); no migration was created and `src/generated/prisma` needed no regeneration.
+
+### P.5 Real Dashboard Attachments (placeholder removed)
+
+- `src/lib/data/attachments.ts` no longer returns in-memory `Albums[]`. `getAttachments()` now queries **real `FileRecord` rows** (`category: "ATTACHMENT"`, scoped to the current workspace via `currentWorkspace`, `orderBy createdAt desc`), returning `WorkspaceAttachment[]`: `{ id, originalName, mimeType, size, storageKey, createdAt, task: { id, title, project: { id, title } } | null }` in a single query (no N+1).
+- `dashboard/_components/activity.tsx` — **Attachments card** now lists the 8 most recent real attachments (`slice(0, 8)`): each row links to `/api/files/<storageKey>` (`target="_blank" rel="noopener noreferrer"`), shows the original name, human-readable size (`formatBytes`), and its task context ("in {task title}"), with an empty state (personal note area preserved). **Team Members card** renders each member via `UserAvatar`.
+- `dashboard/_components/stats.tsx` unchanged — it already used `attachments.length`, which now reflects the real count.
+- Unused `Albums` type removed from `src/lib/definitions.ts`.
+
+### P.6 Security
+
+Unchanged posture, verified live: avatars and attachments are still served exclusively through the authenticated **`GET /api/files/[...key]`** (200 with cookie, 401 without); no `public/` exposure, no filesystem paths to the client, original names/sizes are display-only, and no new dependencies were added. The invite-modal and members data flow only `avatarFile.storageKey` (never raw paths).
+
+### P.7 Performance
+
+All avatar/attachment data arrives in the single query each screen already made — no new round-trips and no N+1:
+- project member includes (2 queries) select `avatarFile` inline;
+- members API: one `findMany` with nested user select;
+- attachments: one `findMany` with `task { project }` include, client slices to 8.
+
+### P.8 Files Changed
+
+| File | Change |
+| --- | --- |
+| `src/components/UserAvatar.tsx` | **New** reusable avatar component (`/api/files/<storageKey>` img or letter fallback). |
+| `src/app/(protected)/dashboard/profile/page.tsx` | Redesigned profile screen (header, avatar card, `<dl>` account card). |
+| `src/app/(protected)/dashboard/profile/_components/AvatarUploadForm.tsx` | Split parent/child; keyed preview picker; "Upload/Change avatar" dynamic button. |
+| `src/lib/data/projects.ts` + `…/projects/[projectId]/_components/types.ts` | Project member `user` selects include `avatarFile.storageKey`. |
+| `src/app/(protected)/projects/[projectId]/_components/projectMembersStack.tsx` | Members render via `UserAvatar` (real image or first-letter fallback). |
+| `src/app/(protected)/dashboard/_components/UserProfileDropdown.tsx` | Uses `UserAvatar`. |
+| `src/app/(protected)/dashboard/members/types.ts` + `components/MemberCard.tsx` | `Member` carries `avatarFile`; card shows each member's own avatar. |
+| `src/app/api/workspaces/current/members/route.ts` | Selects `avatarFile.storageKey` for every member. |
+| `src/app/(protected)/projects/[projectId]/_components/InviteProjectMemberModal.tsx` | Invitable members show their own avatars. |
+| `src/lib/data/attachments.ts` + `src/lib/definitions.ts` | Real workspace-scoped attachment query; removed unused `Albums`. |
+| `src/lib/data/members.ts` | `WorkspaceMember`/`getUsers` include `avatarFile`. |
+| `src/app/(protected)/dashboard/_components/activity.tsx` | Real attachment cards + `UserAvatar` team members. |
+| `src/app/layout.tsx` | **Double-toast fix**: single global `ToastContainer` + `react-toastify` CSS import (see P.11). |
+| 11 toast-emitting components (`deleteProjectButton`, `createProjectModal`, `editProjectModal`, `createTaskModal`, `editTaskModal`, `deleteTaskButton`, `TaskAttachmentModal`, `loginPageForm`, `AvatarUploadForm`, `InviteMemberButton`, `InviteProjectMemberButton`) | Removed each component-owned `<ToastContainer>` and CSS import (see P.11). |
+
+### P.9 Verification Results
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| `pnpm exec tsc --noEmit` | **PASS** | clean, run after each change batch |
+| `pnpm lint` | **PASS** | clean final run |
+| `pnpm build` | **PASS** | compiled, TypeScript finished, 21 routes |
+| Update-avatar action + `updateAvatar` label | **PASS** | live SSR `/dashboard/profile`: avatar user shows "Change avatar" + img; non-avatar user shows ">Upload avatar<" |
+| `/api/files/avatar/…` + `/api/files/attachment/…` | **PASS** | 200 (correct MIME) with signed-in cookie, 401 without — secure serving intact |
+| Project board member avatars | **PASS** | live `/projects/<id>`: users with avatars → `<img>/api/files/…`, others → first-letter fallback, each with their own data |
+| Invite modal data contract | **PASS** | the client-rendered modal is closed at SSR, but its props are serialized into the RSC flight payload: invitable member's avatar `storageKey` + email present in `/projects/<id>` HTML |
+| Members API contract | **PASS** | `GET /api/workspaces/current/members` returns `avatarFile: { storageKey }` per member (present for the seeded avatar member, `null` otherwise) |
+| `/dashboard` real attachments | **PASS** | live SSR: "3 files" badge, 3 names rendered, sizes ("1.0 MB", "20.0 KB"), 3 unique `/api/files/attachment/…` links each with `target="_blank" rel="noopener noreferrer"`, "in Ship it" task context, Team Members fallback initials |
+| Double-toast fix | **PASS** | `/login`, `/pricing` and a seeded project page (2 task cards) each render **exactly 1** `class="Toastify"` container in SSR HTML (previously ~N containers per page) |
+| Test-data cleanup | **PASS** | 0 leftover test rows/files; `uploads/` contains only the 2 real user files |
+| Repository test suite | **NOT RUN** | no test runner exists in this repo (only `dev`, `build`, `start`, `lint`) |
+| Browser click-through | **NOT RUN** | no browser automation. Client-rendered surfaces (`/dashboard/members` list, invite modal open state, profile preview interactions) were verified via their API/flight-payload contracts + the shared component's behaviour proven on server-rendered pages, not by clicking the UI. |
+
+### P.10 Known Limitations
+
+- The `/dashboard/members` list and the invite modal are **client-fetched/client-rendered**, so their rendered rows couldn't be captured in SSR HTML by `curl` — verified through the API contract, the flight payload, `UserAvatar`'s proven SSR rendering, and type/lint/build checks.
+- Dashboard attachments card shows the **8 most recent** attachments (intentional `slice`), not a paginated list.
+- Stale-browser caveat: the long-running dev server on port 3000 may not have picked up the members API change prior to its first request after the edit; a browser refresh pulls the new code. (All responses above were fetched after the edits were live.)
+- Everything in Lesson 25 Section M about not implementing S3/presigned URLs/scanning/CDN still applies — unchanged by this follow-up.
+
+### P.11 Double-Toast Fix
+
+- **Symptom**: sending an invitation (and any toast on the project board) showed the same message multiple times.
+- **Root cause**: every toast-emitting component mounted its own `<ToastContainer>`. Each `BoardCard` mounts `TaskAttachmentModal` + `EditTaskModal` + `DeleteTaskButton`, so a project with N cards mounted ~3N containers, plus the invite button's own — and `react-toastify` renders every fired toast in **every** mounted container.
+- **Fix**: one global `<ToastContainer position="top-right" />` (with the CSS import) in the root layout `src/app/layout.tsx`; removed the container + CSS import from all 11 components that previously owned one. The invite buttons' `autoClose={3000}` was dropped in favour of the container default (5s) — cosmetic only.
+- **Verification**: `/login`, `/pricing`, and a seeded project page with two task cards each render **exactly one** `class="Toastify"` container in SSR HTML (previously ~1 + 3/card); `tsc`, `lint`, `build` pass; seed rows removed afterwards.

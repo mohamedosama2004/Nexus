@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { UserAvatar } from "@/src/components/UserAvatar";
 import type { WorkspaceMember } from "@/src/lib/data/members";
 
 const PROJECT_ROLES = ["MEMBER", "OWNER"] as const;
@@ -122,10 +123,14 @@ function InviteProjectMemberForm({
                       : "border-transparent hover:bg-base-200/50"
                   }`}
                 >
-                  {/* Placeholder until profile pictures are added */}
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
-                    {member.name.trim()[0]?.toUpperCase() ?? "?"}
-                  </span>
+                  <UserAvatar
+                    name={member.name}
+                    storageKey={member.avatarFile?.storageKey ?? null}
+                    alt={member.name}
+                    className="size-10 bg-primary/15 text-primary"
+                    textClassName="text-sm font-semibold"
+                    fallback="initial"
+                  />
 
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-base-content">

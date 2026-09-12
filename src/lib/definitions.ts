@@ -24,12 +24,6 @@ export type Task = {
   completed: boolean;
 };
 
-export type Albums = {
-  userId: ID;
-  id: ID;
-  title: string;
-};
-
 // posts
 export type Post= {
   userId: ID;

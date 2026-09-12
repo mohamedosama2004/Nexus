@@ -1,16 +1,79 @@
-import { Albums } from "../definitions";
+import { prisma } from "../prisma";
+import { getCurrentUser } from "../auth";
+import { getCurrentWorkspace } from "../current-workspace";
 
-const attachments: Albums[] = [
-  { userId: 1, id: 1, title: "Brand kit" },
-  { userId: 1, id: 2, title: "Sprint notes" },
-  { userId: 2, id: 3, title: "Release checklist" },
-  { userId: 2, id: 4, title: "Onboarding assets" },
-  { userId: 3, id: 5, title: "Design references" },
-  { userId: 3, id: 6, title: "Planning deck" },
-  { userId: 4, id: 7, title: "Stakeholder brief" },
-  { userId: 5, id: 8, title: "Archive bundle" },
-];
+export type WorkspaceAttachment = {
+  id: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  storageKey: string;
+  createdAt: Date;
+  task: {
+    id: string;
+    title: string;
+    project: {
+      id: string;
+      title: string;
+    };
+  } | null;
+};
 
-export async function getAttachments() {
+/**
+ * Returns the real task attachments belonging to the current user's workspace.
+ *
+ * A single query joins FileRecord → Task → Project so the workspace scope
+ * and every row's task/project context arrive in one round-trip (no N+1).
+ * The metadata (storageKey) is exactly what TaskAttachmentModal and the
+ * secure route handler use, so the dashboard grid can link straight to
+ * /api/files/<storageKey>.
+ */
+export async function getAttachments(): Promise<WorkspaceAttachment[]> {
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    return [];
+  }
+
+  const currentWorkspace = await getCurrentWorkspace();
+
+  if (!currentWorkspace) {
+    return [];
+  }
+
+  const attachments = await prisma.fileRecord.findMany({
+    where: {
+      category: "ATTACHMENT",
+      task: {
+        project: {
+          workspaceId: currentWorkspace.workspace.id,
+        },
+      },
+    },
+    select: {
+      id: true,
+      originalName: true,
+      mimeType: true,
+      size: true,
+      storageKey: true,
+      createdAt: true,
+      task: {
+        select: {
+          id: true,
+          title: true,
+          project: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
   return attachments;
 }

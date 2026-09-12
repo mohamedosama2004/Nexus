@@ -5,6 +5,7 @@ export type WorkspaceMember = {
   id: string;
   name: string;
   email: string;
+  avatarFile: { storageKey: string } | null;
 };
 
 export async function getUsers(): Promise<WorkspaceMember[]> {
@@ -25,6 +26,11 @@ export async function getUsers(): Promise<WorkspaceMember[]> {
           id: true,
           name: true,
           email: true,
+          avatarFile: {
+            select: {
+              storageKey: true,
+            },
+          },
         },
       },
     },
@@ -34,5 +40,6 @@ export async function getUsers(): Promise<WorkspaceMember[]> {
     id: member.user.id,
     name: member.user.name,
     email: member.user.email,
+    avatarFile: member.user.avatarFile,
   }));
 }

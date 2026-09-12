@@ -7,8 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginInput } from "@/src/schemas/auth.schema";
 import { AuthInput } from "@/src/app/(auth)/_components/AuthInput";
 import { login, resendVerification } from "@/src/actions/auth.actions";
-import GoogleButton from "./googleButton";import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import GoogleButton from "./googleButton";
+import { toast } from "react-toastify";
 
 type Props = {
   oauthError?: string;
@@ -131,7 +131,6 @@ const LoginPageForm = ({ oauthError, googleEnabled }: Props) => {
           Create one
         </Link>
       </p>
-      <ToastContainer position="top-right" />
     </>
   );
 };

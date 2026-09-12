@@ -1,4 +1,5 @@
 import type { Member } from "../types";
+import { UserAvatar } from "@/src/components/UserAvatar";
 
 const ROLE_STYLES: Record<string, string> = {
   OWNER: "badge-primary",
@@ -6,21 +7,17 @@ const ROLE_STYLES: Record<string, string> = {
   MEMBER: "badge-ghost",
 };
 
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
-
 export function MemberCard({ member }: { member: Member }) {
   return (
     <li className="flex items-center gap-4 rounded-2xl border border-base-200 bg-base-100 p-4 transition-colors hover:border-base-300 hover:bg-base-200/40">
-      <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-        {getInitials(member.user.name || "?")}
-      </div>
+      <UserAvatar
+        name={member.user.name}
+        storageKey={member.user.avatarFile?.storageKey ?? null}
+        alt={member.user.name || "Member"}
+        className="size-11 bg-primary/10 text-primary"
+        textClassName="text-sm font-semibold"
+        fallback="initials"
+      />
 
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-semibold text-base-content">

@@ -8,8 +8,7 @@ import {
   useState,
 } from "react";
 import { PaperClipIcon } from "@heroicons/react/24/outline";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import {
   uploadTaskAttachment,
   type UploadAttachmentActionState,
@@ -208,8 +207,6 @@ export default function TaskAttachmentModal({
           <button aria-label="Close">close</button>
         </form>
       </dialog>
-
-      <ToastContainer position="top-right" />
     </>
   );
 }

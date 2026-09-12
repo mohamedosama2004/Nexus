@@ -2,8 +2,7 @@
 
 import { useActionState, useCallback, useEffect, useRef, useState } from "react";
 import { TrashIcon } from "@heroicons/react/24/outline";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { deleteTask, type TaskActionState } from "@/src/actions/task.actions";
 
 type Props = {
@@ -135,8 +134,6 @@ export default function DeleteTaskButton({
           <button aria-label="Close">close</button>
         </form>
       </dialog>
-
-      <ToastContainer position="top-right" />
     </>
   );
 }

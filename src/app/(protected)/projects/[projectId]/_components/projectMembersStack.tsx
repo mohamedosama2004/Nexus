@@ -1,10 +1,7 @@
+import { UserAvatar } from "@/src/components/UserAvatar";
 import type { ProjectMemberWithUser } from "./types";
 
 const MAX_VISIBLE = 4;
-
-function getInitial(name: string) {
-  return (name.trim()[0] ?? "?").toUpperCase();
-}
 
 export default function ProjectMembersStack({
   members,
@@ -21,16 +18,19 @@ export default function ProjectMembersStack({
   return (
     <div className="flex items-center -space-x-2">
       {visible.map((member) => (
-        <div
+        <UserAvatar
           key={member.id}
+          name={member.user.name}
+          storageKey={member.user.avatarFile?.storageKey ?? null}
+          alt={member.user.name}
           title={member.user.name}
-          className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-base-100 bg-primary/20 text-xs font-bold text-primary"
-        >
-          {getInitial(member.user.name)}
-        </div>
+          className="size-8 border-2 border-base-100 bg-primary/20 text-primary"
+          textClassName="text-xs font-bold"
+          fallback="initial"
+        />
       ))}
       {overflow > 0 && (
-        <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-base-100 bg-base-200 text-[10px] font-bold text-base-content/50">
+        <div className="flex size-8 items-center justify-center rounded-full border-2 border-base-100 bg-base-200 text-[10px] font-bold text-base-content/50">
           +{overflow}
         </div>
       )}

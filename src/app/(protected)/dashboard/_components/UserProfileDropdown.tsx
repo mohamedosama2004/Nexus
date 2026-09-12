@@ -8,6 +8,7 @@ import {
   Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 import { LogoutButton } from "@/src/components/buttons/LogoutButton";
+import { UserAvatar } from "@/src/components/UserAvatar";
 
 type User = {
   id: string;
@@ -42,15 +43,6 @@ export function UserProfileDropdown({ user }: { user: User }) {
     };
   }, [open]);
 
-  const initials = user?.name
-    ? user.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "?";
-
   return (
     <div ref={dropdownRef} className="relative">
       <button
@@ -59,18 +51,14 @@ export function UserProfileDropdown({ user }: { user: User }) {
         aria-haspopup="true"
         aria-expanded={open}
       >
-        <div className="flex size-9 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-sm font-semibold text-primary">
-          {user?.avatarFile ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={`/api/files/${user.avatarFile.storageKey}`}
-              alt={`${user.name}'s avatar`}
-              className="size-full object-cover"
-            />
-          ) : (
-            initials
-          )}
-        </div>
+        <UserAvatar
+          name={user?.name}
+          storageKey={user?.avatarFile?.storageKey ?? null}
+          alt={`${user?.name || "User"}'s avatar`}
+          className="size-9 bg-primary/10 text-primary"
+          textClassName="text-sm font-semibold"
+          fallback="initials"
+        />
         <div className="hidden text-left lg:block">
           <div className="text-sm font-medium text-base-content">
             {user?.name || "User"}

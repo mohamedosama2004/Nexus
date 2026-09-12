@@ -5,5 +5,6 @@ export type Member = {
     id: string;
     name: string;
     email: string;
+    avatarFile: { storageKey: string } | null;
   };
 };

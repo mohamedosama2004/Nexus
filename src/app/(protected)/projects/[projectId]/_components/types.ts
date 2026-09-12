@@ -15,6 +15,11 @@ export type ProjectWithMembersAndTasks = Prisma.ProjectGetPayload<{
           select: {
             id: true;
             name: true;
+            avatarFile: {
+              select: {
+                storageKey: true;
+              };
+            };
           };
         };
       };
