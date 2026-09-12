@@ -35,9 +35,13 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
   // Changes whenever tasks are added/removed or move columns,
   // forcing the client board to remount with fresh server data.
+  const attachmentCount = project.tasks.reduce(
+    (total, task) => total + task.attachments.length,
+    0,
+  );
   const boardKey = `${project.id}-${project.tasks.length}-${
     project.tasks.filter((t) => t.status === "completed").length
-  }`;
+  }-${attachmentCount}`;
 
   return (
     <div className="space-y-6">

@@ -15,7 +15,11 @@ export async function getCurrentUser() {
       token: sessionToken,
     },
     include: {
-      user: true,
+      user: {
+        include: {
+          avatarFile: true,
+        },
+      },
     },
   });
 

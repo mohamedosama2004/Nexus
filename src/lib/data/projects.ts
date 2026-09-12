@@ -240,7 +240,15 @@ export async function getProjectById(projectId: string) {
     },
 
     include: {
-      tasks: true,
+      tasks: {
+        include: {
+          attachments: {
+            orderBy: {
+              createdAt: "desc",
+            },
+          },
+        },
+      },
 
       members: {
         select: {

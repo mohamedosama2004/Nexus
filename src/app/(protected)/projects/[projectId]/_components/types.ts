@@ -2,7 +2,11 @@ import type { Prisma } from "@/src/generated/prisma/client";
 
 export type ProjectWithMembersAndTasks = Prisma.ProjectGetPayload<{
   include: {
-    tasks: true;
+    tasks: {
+      include: {
+        attachments: true;
+      };
+    };
     members: {
       select: {
         id: true;
@@ -22,3 +26,5 @@ export type ProjectMemberWithUser =
   ProjectWithMembersAndTasks["members"][number];
 
 export type ProjectTask = ProjectWithMembersAndTasks["tasks"][number];
+
+export type ProjectAttachment = ProjectTask["attachments"][number];

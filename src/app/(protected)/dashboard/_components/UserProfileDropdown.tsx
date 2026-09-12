@@ -13,6 +13,7 @@ type User = {
   id: string;
   name: string;
   email: string;
+  avatarFile: { storageKey: string } | null;
 } | null;
 
 export function UserProfileDropdown({ user }: { user: User }) {
@@ -58,8 +59,17 @@ export function UserProfileDropdown({ user }: { user: User }) {
         aria-haspopup="true"
         aria-expanded={open}
       >
-        <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-          {initials}
+        <div className="flex size-9 items-center justify-center overflow-hidden rounded-full bg-primary/10 text-sm font-semibold text-primary">
+          {user?.avatarFile ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={`/api/files/${user.avatarFile.storageKey}`}
+              alt={`${user.name}'s avatar`}
+              className="size-full object-cover"
+            />
+          ) : (
+            initials
+          )}
         </div>
         <div className="hidden text-left lg:block">
           <div className="text-sm font-medium text-base-content">
