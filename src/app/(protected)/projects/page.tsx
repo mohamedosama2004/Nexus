@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import ProjectsList from "./_components/projectsList";
@@ -5,6 +6,11 @@ import SearchFilters from "./_components/searchFilters";
 import ProjectsLoadingSkeleton from "./loading";
 import CreateProjectModal from "./_components/createProjectModal";
 import { resolveProjectSort } from "@/src/lib/data/projects";
+
+export const metadata: Metadata = {
+  title: "Projects",
+  description: "Browse, search, and manage your workspace projects in Nexus.",
+};
 
 type Props = {
   searchParams: Promise<{

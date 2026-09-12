@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   CheckCircleIcon,
@@ -8,6 +9,11 @@ import {
 
 import { consumeEmailVerificationToken } from "@/src/lib/email-verification";
 import ResendVerificationForm from "../_components/resendVerificationForm";
+
+export const metadata: Metadata = {
+  title: "Verify your email",
+  description: "Verify your email address to activate your Nexus account.",
+};
 
 type Props = {
   searchParams: Promise<{

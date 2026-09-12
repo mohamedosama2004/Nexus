@@ -1,3 +1,5 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import { getProjectById } from "@/src/lib/data/projects";
 import { getUsers } from "@/src/lib/data/members";
 import { getCurrentUser } from "@/src/lib/auth";
@@ -10,9 +12,37 @@ type ProjectPageProps = {
   params: Promise<{ projectId: string }>;
 };
 
+// Deduplicates the project lookup so `generateMetadata` and the page render
+// share a single query within the same request.
+const fetchProject = cache((projectId: string) => getProjectById(projectId));
+
+export async function generateMetadata({
+  params,
+}: ProjectPageProps): Promise<Metadata> {
+  const { projectId } = await params;
+  const project = await fetchProject(projectId);
+
+  if (!project) {
+    notFound();
+  }
+
+  const description = project.description
+    ? project.description.slice(0, 160)
+    : "Manage tasks, members, and progress for this Nexus project.";
+
+  return {
+    title: project.title,
+    description,
+    robots: {
+      index: false,
+      follow: false,
+    },
+  };
+}
+
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { projectId } = await params;
-  const project = await getProjectById(projectId);
+  const project = await fetchProject(projectId);
 
   if (!project) {
     notFound();
