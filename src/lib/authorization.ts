@@ -4,7 +4,7 @@ import { prisma } from "./prisma";
 
 import { ProjectRole, Role } from "../generated/prisma/enums";
 
-type workspacePermission =
+export type workspacePermission =
   | "CREATE_PROJECT"
   | "UPDATE_PROJECT"
   | "DELETE_PROJECT"
@@ -13,7 +13,7 @@ type workspacePermission =
   | "DELETE_TASK"
   | "INVITE_MEMBER";
 
-const workspaceRolePermissions: Record<Role, workspacePermission[]> = {
+export const workspaceRolePermissions: Record<Role, workspacePermission[]> = {
   OWNER: [
     "CREATE_PROJECT",
     "UPDATE_PROJECT",
@@ -37,7 +37,7 @@ const workspaceRolePermissions: Record<Role, workspacePermission[]> = {
   MEMBER: ["CREATE_TASK", "UPDATE_TASK"],
 };
 
-function hasWorkspacePermission(
+export function hasWorkspacePermission(
   role: Role,
   permission: workspacePermission
 ) {
@@ -102,7 +102,7 @@ export async function requireWorkspacePermission(
   };
 }
 
-type projectPermission =
+export type projectPermission =
   | "VIEW_PROJECT"
   | "UPDATE_PROJECT"
   | "DELETE_PROJECT"
@@ -111,7 +111,7 @@ type projectPermission =
   | "DELETE_TASK"
   | "MANAGE_PROJECT_MEMBERS";
 
-const projectRolePermissions: Record<ProjectRole, projectPermission[]> = {
+export const projectRolePermissions: Record<ProjectRole, projectPermission[]> = {
   OWNER: [
     "VIEW_PROJECT",
     "UPDATE_PROJECT",
@@ -129,7 +129,7 @@ const projectRolePermissions: Record<ProjectRole, projectPermission[]> = {
   ],
 };
 
-function hasProjectPermission(
+export function hasProjectPermission(
   role: ProjectRole,
   permission: projectPermission
 ) {

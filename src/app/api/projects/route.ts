@@ -4,6 +4,7 @@ import { getCurrentUser } from "../../../lib/auth";
 import { requireWorkspacePermission } from "@/src/lib/authorization";
 import { projectSchema } from "@/src/schemas/project.schema";
 import { apiError } from "@/src/lib/api-response";
+import { assertSameOrigin } from "@/src/lib/csrf";
 
 // read projects
 export async function GET(request: Request) {
@@ -68,6 +69,12 @@ export async function GET(request: Request) {
 // create projects
 
 export async function POST(request: Request) {
+  const originCheck = assertSameOrigin(request);
+
+  if (!originCheck.ok) {
+    return apiError(originCheck.error, 403);
+  }
+
   const user = await getCurrentUser();
 
   if (!user) {

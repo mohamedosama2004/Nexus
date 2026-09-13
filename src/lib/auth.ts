@@ -1,6 +1,9 @@
 import { cookies } from "next/headers";
 import { prisma } from "../lib/prisma";
 
+export { toPublicUser } from "./user";
+export type { PublicUser } from "./user";
+
 export async function getCurrentUser() {
   const cookieStore = await cookies();
 
@@ -19,6 +22,9 @@ export async function getCurrentUser() {
         include: {
           avatarFile: true,
         },
+        omit: {
+          passwordHash: true,
+        },
       },
     },
   });
@@ -28,6 +34,11 @@ export async function getCurrentUser() {
   }
 
   if (session.expiresAt < new Date()) {
+    // Opportunistically delete the expired row so the DB does not
+    // accumulate dead sessions for users who come back after expiry.
+    await prisma.session.deleteMany({
+      where: { token: sessionToken },
+    });
     return null;
   }
 
