@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -50,11 +51,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // x-nonce is set per-request by the proxy for the CSP policy.
+  const nonce = (await headers()).get("x-nonce");
+
   return (
     <html
       lang="en"
@@ -63,7 +67,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-base-100 text-base-content">
-        <ThemeScript />
+        <ThemeScript nonce={nonce} />
         <QueryProvider>{children}</QueryProvider>
         <ToastContainer position="top-right" />
       </body>

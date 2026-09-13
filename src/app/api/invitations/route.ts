@@ -4,8 +4,13 @@ import crypto from "crypto";
 import { prisma } from "../../../lib/prisma";
 import { getCurrentUser } from "../../../lib/auth";
 import { requireWorkspacePermission } from "../../../lib/authorization";
-import { apiError } from "../../../lib/api-response";
+import { apiError, apiTooManyRequests } from "../../../lib/api-response";
+import { assertSameOrigin } from "../../../lib/csrf";
 import { getCurrentWorkspace } from "../../../lib/current-workspace";
+import {
+  consumeRateLimit,
+  getRateLimitClientIp,
+} from "../../../lib/rate-limit";
 import { createInvitationSchema } from "../../../schemas/invitation";
 import {
   buildInvitationUrl,
@@ -14,11 +19,28 @@ import {
 
 export async function POST(request: Request) {
   try {
+    // 0. CSRF: state-changing requests must come from our origin
+    const originCheck = assertSameOrigin(request);
+
+    if (!originCheck.ok) {
+      return apiError(originCheck.error, 403);
+    }
+
     // 1. Authentication
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
       return apiError("Unauthorized", 401);
+    }
+
+    // 1.5 Rate limit: cap invitations created per user + IP
+    const [userLimit, ipLimit] = await Promise.all([
+      consumeRateLimit(`invite:${currentUser.id}`, "inviteCreate"),
+      consumeRateLimit(`invite-ip:${await getRateLimitClientIp()}`, "inviteCreate"),
+    ]);
+
+    if (!userLimit.allowed || !ipLimit.allowed) {
+      return apiTooManyRequests(Math.max(userLimit.retryAfterSeconds, ipLimit.retryAfterSeconds));
     }
 
     // 2. Read request body
@@ -55,6 +77,17 @@ export async function POST(request: Request) {
     if (!authorization.authorized) {
       return apiError(
         authorization.error ?? "authorized",
+        403
+      );
+    }
+
+    // 4.5 Privilege escalation guard: only the workspace OWNER may grant OWNER
+    if (
+      result.data.role === "OWNER" &&
+      authorization.membership?.role !== "OWNER"
+    ) {
+      return apiError(
+        "You cannot invite a user as an OWNER.",
         403
       );
     }

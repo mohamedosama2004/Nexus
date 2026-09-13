@@ -8,8 +8,12 @@ import {
   createEmailVerificationToken,
 } from "../lib/email-verification";
 import { sendVerificationEmail } from "../lib/email";
-
-const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
+import { createUserSession } from "../lib/session";
+import {
+  RATE_LIMIT_EXCEEDED_MESSAGE,
+  consumeRateLimit,
+  getRateLimitClientIp,
+} from "../lib/rate-limit";
 
 export async function register(formData: FormData) {
   const name = formData.get("name");
@@ -25,6 +29,16 @@ export async function register(formData: FormData) {
   if (!result.success) {
     return {
       error: "Invalid input",
+    };
+  }
+
+  const clientIp = await getRateLimitClientIp();
+
+  const rateLimit = await consumeRateLimit(`register:${clientIp}`, "register");
+
+  if (!rateLimit.allowed) {
+    return {
+      error: RATE_LIMIT_EXCEEDED_MESSAGE,
     };
   }
 
@@ -115,6 +129,21 @@ export async function login(formData: FormData) {
 
   const { email: validEmail, password: validPassword } = result.data;
 
+  const clientIp = await getRateLimitClientIp();
+
+  // Limit both per-IP (bursts / spray from one host) and per-email+IP
+  // (credential stuffing against a single account).
+  const [ipLimit, accountLimit] = await Promise.all([
+    consumeRateLimit(`login:${clientIp}`, "login"),
+    consumeRateLimit(`login:${validEmail.toLowerCase()}:${clientIp}`, "login"),
+  ]);
+
+  if (!ipLimit.allowed || !accountLimit.allowed) {
+    return {
+      error: RATE_LIMIT_EXCEEDED_MESSAGE,
+    };
+  }
+
   const user = await prisma.user.findUnique({
     where: {
       email: validEmail,
@@ -150,25 +179,7 @@ export async function login(formData: FormData) {
     };
   }
 
-  const sessionToken = crypto.randomUUID();
-
-  await prisma.session.create({
-    data: {
-      userId: user.id,
-      token: sessionToken,
-      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
-    },
-  });
-
-  const cookieStore = await cookies();
-
-  cookieStore.set("session_token", sessionToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    expires: new Date(Date.now() + SESSION_TTL_MS),
-    path: "/",
-  });
+  await createUserSession(user.id);
 
   return {
     success: true,
@@ -183,6 +194,19 @@ export async function resendVerification(formData: FormData) {
   if (!result.success) {
     // Deliberately generic: do not reveal whether the email exists.
     return { success: true };
+  }
+
+  const clientIp = await getRateLimitClientIp();
+
+  const rateLimit = await consumeRateLimit(
+    `verification-resend:${clientIp}:${result.data.email.toLowerCase()}`,
+    "verificationResend",
+  );
+
+  if (!rateLimit.allowed) {
+    return {
+      error: RATE_LIMIT_EXCEEDED_MESSAGE,
+    };
   }
 
   const user = await prisma.user.findUnique({
@@ -214,7 +238,9 @@ export async function logout() {
   const sessionToken = cookieStore.get("session_token")?.value;
 
   if (sessionToken) {
-    await prisma.session.delete({
+    // deleteMany (not delete) so logging out never throws when the row was
+    // already removed or expired.
+    await prisma.session.deleteMany({
       where: {
         token: sessionToken,
       },

@@ -47,6 +47,11 @@ export async function getAttachments(): Promise<WorkspaceAttachment[]> {
       task: {
         project: {
           workspaceId: currentWorkspace.workspace.id,
+          members: {
+            some: {
+              userId: currentUser.id,
+            },
+          },
         },
       },
     },

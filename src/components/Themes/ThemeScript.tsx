@@ -1,7 +1,8 @@
-export function ThemeScript() {
+export function ThemeScript({ nonce }: { nonce?: string | null }) {
   return (
     <script
       id="theme-script"
+      nonce={nonce ?? undefined}
       dangerouslySetInnerHTML={{
         __html: `
           try {

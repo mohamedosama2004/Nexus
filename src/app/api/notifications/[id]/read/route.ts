@@ -5,12 +5,20 @@ import { prisma } from "../../../../../lib/prisma";
 import { getCurrentUser } from "../../../../../lib/auth";
 
 import { apiError } from "../../../../../lib/api-response";
+import { assertSameOrigin } from "@/src/lib/csrf";
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // 0. CSRF: state-changing requests must come from our origin
+    const originCheck = assertSameOrigin(request);
+
+    if (!originCheck.ok) {
+      return apiError(originCheck.error, 403);
+    }
+
     // 1. Authentication
     const currentUser = await getCurrentUser();
 

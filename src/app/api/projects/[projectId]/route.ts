@@ -6,6 +6,7 @@ import { requireProjectPermission } from "../../../../lib/authorization";
 
 import { updateProjectSchema } from "@/src/schemas/project.schema";
 import { apiError } from "@/src/lib/api-response";
+import { assertSameOrigin } from "@/src/lib/csrf";
 
 export async function GET(
   request: Request,
@@ -57,6 +58,12 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ projectId: string }> },
 ) {
+  const originCheck = assertSameOrigin(request);
+
+  if (!originCheck.ok) {
+    return apiError(originCheck.error, 403);
+  }
+
   const { projectId: id } = await params;
 
   let body: unknown;
@@ -111,6 +118,12 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ projectId: string }> },
 ) {
+  const originCheck = assertSameOrigin(request);
+
+  if (!originCheck.ok) {
+    return apiError(originCheck.error, 403);
+  }
+
   const { projectId: id } = await params;
 
   const permission = await requireProjectPermission(id, "DELETE_PROJECT");

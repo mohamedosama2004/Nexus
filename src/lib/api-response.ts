@@ -13,3 +13,17 @@ export function apiError(
     { status }
   );
 }
+
+export function apiTooManyRequests(retryAfterSeconds: number) {
+  return NextResponse.json(
+    {
+      error: "Too many requests. Please try again later.",
+    },
+    {
+      status: 429,
+      headers: {
+        "Retry-After": String(retryAfterSeconds),
+      },
+    }
+  );
+}

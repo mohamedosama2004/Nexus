@@ -4,7 +4,12 @@ import crypto from "crypto";
 import { prisma } from "@/src/lib/prisma";
 import { getCurrentUser } from "@/src/lib/auth";
 import { requireProjectPermission } from "@/src/lib/authorization";
-import { apiError } from "@/src/lib/api-response";
+import { apiError, apiTooManyRequests } from "@/src/lib/api-response";
+import { assertSameOrigin } from "@/src/lib/csrf";
+import {
+  consumeRateLimit,
+  getRateLimitClientIp,
+} from "@/src/lib/rate-limit";
 import {
   buildInvitationUrl,
   sendProjectInvitationEmail,
@@ -17,11 +22,28 @@ export async function POST(
   { params }: { params: Promise<{ projectId: string }> },
 ) {
   try {
+    // 0. CSRF: state-changing requests must come from our origin
+    const originCheck = assertSameOrigin(request);
+
+    if (!originCheck.ok) {
+      return apiError(originCheck.error, 403);
+    }
+
     // 1. Authentication
     const currentUser = await getCurrentUser();
 
     if (!currentUser) {
       return apiError("Unauthorized", 401);
+    }
+
+    // 1.5 Rate limit: cap project invitations created per user + IP
+    const [userLimit, ipLimit] = await Promise.all([
+      consumeRateLimit(`invite:${currentUser.id}`, "inviteCreate"),
+      consumeRateLimit(`invite-ip:${await getRateLimitClientIp()}`, "inviteCreate"),
+    ]);
+
+    if (!userLimit.allowed || !ipLimit.allowed) {
+      return apiTooManyRequests(Math.max(userLimit.retryAfterSeconds, ipLimit.retryAfterSeconds));
     }
 
     // 2. Get projectId from URL
@@ -59,6 +81,17 @@ export async function POST(
     if (!authorization.authorized) {
       return apiError(
         authorization.error ?? "Unauthorized.",
+        403,
+      );
+    }
+
+    // 5.5 Privilege escalation guard: only the project OWNER may grant OWNER
+    if (
+      result.data.role === "OWNER" &&
+      authorization.projectMember?.role !== "OWNER"
+    ) {
+      return apiError(
+        "You cannot invite a user as an OWNER.",
         403,
       );
     }

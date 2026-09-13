@@ -9,12 +9,20 @@ import {
   fileValidationErrors,
   validateFile,
 } from "../lib/files/validate-file";
+import {
+  contentValidationErrors,
+  validateFileContent,
+} from "../lib/files/content-validation";
 import { uploadPolicies } from "../lib/files/upload-policies";
 import {
   buildStorageKey,
   getStorage,
   sanitizeFilename,
 } from "../lib/files/storage";
+import {
+  RATE_LIMIT_EXCEEDED_MESSAGE,
+  consumeRateLimit,
+} from "../lib/rate-limit";
 
 export type AvatarActionState = {
   success: boolean;
@@ -41,6 +49,19 @@ export async function updateAvatar(
     };
   }
 
+  // 1.5 Rate limit: cap avatar uploads per user
+  const rateLimit = await consumeRateLimit(
+    `upload-avatar:${currentUser.id}`,
+    "upload",
+  );
+
+  if (!rateLimit.allowed) {
+    return {
+      success: false,
+      error: RATE_LIMIT_EXCEEDED_MESSAGE,
+    };
+  }
+
   // 2. Validate the uploaded file against the avatar policy
   const validation = validateFile(formData.get("avatar"), uploadPolicies.avatar);
 
@@ -53,14 +74,11 @@ export async function updateAvatar(
 
   const file = validation.file;
 
-  // 3. Derive a safe key + display name (never trust the original path)
-  const storageKey = buildStorageKey("avatar", file.type);
-  const originalName = sanitizeFilename(file.name);
-
-  let bytes: Buffer;
+  // 2.5 Verify the real bytes match the declared (and allowed) MIME type
+  let contentBytes: Buffer;
 
   try {
-    bytes = Buffer.from(await file.arrayBuffer());
+    contentBytes = Buffer.from(await file.arrayBuffer());
   } catch (error) {
     console.error("Failed to read uploaded avatar:", error);
     return {
@@ -68,6 +86,21 @@ export async function updateAvatar(
       error: "Could not read the selected file.",
     };
   }
+
+  const contentCheck = validateFileContent(contentBytes, file.type);
+
+  if (!contentCheck.ok) {
+    return {
+      success: false,
+      error: contentValidationErrors[contentCheck.error],
+    };
+  }
+
+  const bytes = contentBytes;
+
+  // 3. Derive a safe key + display name (never trust the original path)
+  const storageKey = buildStorageKey("avatar", file.type);
+  const originalName = sanitizeFilename(file.name);
 
   // 4. Store the bytes
   try {
