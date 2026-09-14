@@ -57,7 +57,7 @@ export function FeaturesSection() {
           </h2>
           <p className="mt-4 text-lg text-base-content/60">
             Nexus gives your team a shared source of truth for projects, tasks,
-            and progress — so nothing falls through the cracks.
+            and progress — so nothing falls through the cracks , everything became easier
           </p>
         </div>
         <div className="mx-auto mt-16 grid max-w-5xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
