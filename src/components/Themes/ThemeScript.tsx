@@ -3,6 +3,7 @@ export function ThemeScript({ nonce }: { nonce?: string | null }) {
     <script
       id="theme-script"
       nonce={nonce ?? undefined}
+      suppressHydrationWarning
       dangerouslySetInnerHTML={{
         __html: `
           try {
