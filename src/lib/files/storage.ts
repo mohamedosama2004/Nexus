@@ -9,9 +9,10 @@ import path from "path";
  * row (`FileRecord`) that points at a storage key, and the bytes themselves are
  * handled by a `FileStorage` implementation.
  *
- * Today only a local filesystem driver ships, which is safe for development.
- * Replacing it with object storage (S3, R2, GCS, ...) only requires a new
- * implementation of this interface and a small lookup in `getStorage`.
+ * Today a local filesystem driver (`local`) and a Vercel Blob driver
+ * (`vercel-blob`) ship. Replacing them with other object storage (S3, R2,
+ * GCS, ...) only requires a new implementation of this interface and a small
+ * lookup in `getStorage`.
  */
 
 export interface FileStorage {
@@ -83,18 +84,88 @@ class LocalFileStorage implements FileStorage {
 
 let storageInstance: FileStorage | null = null;
 
+export type StorageDriver = "local" | "vercel-blob";
+
+const STORAGE_DRIVERS: readonly StorageDriver[] = ["local", "vercel-blob"];
+
+function getStorageDriverName(): StorageDriver {
+  const driver = process.env.STORAGE_DRIVER || "local";
+
+  if ((STORAGE_DRIVERS as readonly string[]).includes(driver)) {
+    return driver as StorageDriver;
+  }
+
+  throw new Error(
+    `Unsupported STORAGE_DRIVER "${driver}". Supported values: "${STORAGE_DRIVERS.join(
+      '", "',
+    )}".`,
+  );
+}
+
+/**
+ * Vercel Blob backend for production uploads.
+ *
+ * Bytes live in a Vercel Blob store (durable object storage) instead of a
+ * serverless filesystem (`/var/task/uploads`), which is ephemeral and
+ * read-only. All blobs are created with `access: "private"` — Nexus serves
+ * them exclusively through the authorized `/api/files/[...key]` route, never
+ * by exposing a public blob URL.
+ *
+ * Storage keys are the object pathnames. `addRandomSuffix` is forced off so
+ * the server-generated key (`avatar/<uuid>.jpg`) is the object path, and
+ * overwriting is rejected to mirror the local driver's safety guarantee.
+ */
+class VercelBlobStorage implements FileStorage {
+  async save(storageKey: string, data: Buffer): Promise<void> {
+    const { put } = await import("@vercel/blob");
+
+    await put(storageKey, data, {
+      access: "private",
+      addRandomSuffix: false,
+      allowOverwrite: false,
+    });
+  }
+
+  async read(storageKey: string): Promise<Buffer | null> {
+    const { get } = await import("@vercel/blob");
+
+    const result = await get(storageKey, { access: "private" });
+
+    if (!result || result.statusCode !== 200) {
+      return null;
+    }
+
+    const bytes = await new Response(result.stream).arrayBuffer();
+    return Buffer.from(bytes);
+  }
+
+  async delete(storageKey: string): Promise<void> {
+    const { del } = await import("@vercel/blob");
+
+    await del(storageKey);
+  }
+}
+
 /**
  * Returns the configured storage driver.
  *
  * - `STORAGE_DRIVER="local"` (default): filesystem under `STORAGE_DIR`
- *   (defaults to `<project>/uploads`).
+ *   (defaults to `<project>/uploads`) — for development.
+ * - `STORAGE_DRIVER="vercel-blob"`: Vercel Blob object storage — for
+ *   production. Authentication is resolved by the SDK from the environment
+ *   (a `BLOB_READ_WRITE_TOKEN`, or Vercel Blob OIDC via `BLOB_STORE_ID` +
+ *   `VERCEL_OIDC_TOKEN` when the store is plugged into the Vercel project).
+ *
+ * Production never silently falls back to the local filesystem: when a Blob
+ * driver is requested but no credentials are present, `getStorage` fails
+ * loudly with a configuration error instead of writing to `/var/task/uploads`.
  */
 export function getStorage(): FileStorage {
   if (storageInstance) {
     return storageInstance;
   }
 
-  const driver = process.env.STORAGE_DRIVER || "local";
+  const driver = getStorageDriverName();
 
   if (driver === "local") {
     storageInstance = new LocalFileStorage(
@@ -103,9 +174,80 @@ export function getStorage(): FileStorage {
     return storageInstance;
   }
 
-  throw new Error(
-    `Unsupported STORAGE_DRIVER "${driver}". Supported values: "local".`,
+  if (driver === "vercel-blob") {
+    const hasCredentials = Boolean(
+      process.env.BLOB_READ_WRITE_TOKEN ||
+        process.env.BLOB_STORE_ID ||
+        process.env.VERCEL_OIDC_TOKEN,
+    );
+
+    if (!hasCredentials) {
+      throw new Error(
+        'STORAGE_DRIVER is "vercel-blob" but no Vercel Blob credentials were found in the environment. ' +
+          "Connect a Blob store to the Vercel project (or set BLOB_READ_WRITE_TOKEN) and run `vercel env pull`, " +
+          "then retry the upload.",
+      );
+    }
+
+    storageInstance = new VercelBlobStorage();
+    return storageInstance;
+  }
+
+  // Unreachable: getStorageDriverName already rejected unknown drivers.
+  throw new Error(`Unsupported STORAGE_DRIVER "${driver}".`);
+}
+
+export type StorageUploadPath =
+  | { mode: "direct"; presignedUrl: string }
+  | { mode: "server" };
+
+/**
+ * Prepares the client-side upload step for a server-generated storage key.
+ *
+ * - Vercel Blob driver: a short-lived signed upload URL (scoped to the exact
+ *   pathname + MIME type, capped at `maximumSizeInBytes`) so the browser can
+ *   PUT the file straight to the store. This keeps attachments — which can be
+ *   up to 10 MB — inside Vercel's serverless request-body limit instead of
+ *   buffering them through a Server Action.
+ * - Local driver: the file still travels server-side through the existing
+ *   Server Action, so `mode` is `"server"` and no URL is issued.
+ */
+export async function getStorageUploadPath(
+  storageKey: string,
+  options: { mimeType: string; maximumSizeInBytes: number },
+): Promise<StorageUploadPath> {
+  if (getStorageDriverName() !== "vercel-blob") {
+    return { mode: "server" };
+  }
+
+  const { issueSignedToken, presignUrl } = await import("@vercel/blob");
+
+  const validUntil = Date.now() + 60 * 60 * 1000;
+
+  const signed = await issueSignedToken({
+    operations: ["put"],
+    pathname: storageKey,
+    allowedContentTypes: [options.mimeType],
+    maximumSizeInBytes: options.maximumSizeInBytes,
+    validUntil,
+  });
+
+  const { presignedUrl } = await presignUrl(
+    {
+      clientSigningToken: signed.clientSigningToken,
+      delegationToken: signed.delegationToken,
+    },
+    {
+      operation: "put",
+      pathname: storageKey,
+      access: "private",
+      allowedContentTypes: [options.mimeType],
+      maximumSizeInBytes: options.maximumSizeInBytes,
+      validUntil,
+    },
   );
+
+  return { mode: "direct", presignedUrl };
 }
 
 const MIME_TYPE_EXTENSIONS: Record<string, string> = {

@@ -1,19 +1,14 @@
 "use client";
 
-import {
-  useActionState,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useRef, useState } from "react";
 import { PaperClipIcon } from "@heroicons/react/24/outline";
 import { toast } from "react-toastify";
 import {
+  createAttachmentRecord,
+  createAttachmentUploadTicket,
   uploadTaskAttachment,
   type UploadAttachmentActionState,
 } from "@/src/actions/task.actions";
-import { SubmitButton } from "@/src/components/buttons/SubmitButton";
 import type { ProjectAttachment } from "./types";
 
 type Props = {
@@ -21,8 +16,17 @@ type Props = {
   attachments: ProjectAttachment[];
 };
 
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // mirrors uploadPolicies.attachment
+
 const ACCEPTED_MIME_TYPES =
   "image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain,application/json,text/csv,application/zip";
+
+const ACCEPTED_MIME_SET = new Set(ACCEPTED_MIME_TYPES.split(","));
+
+const INITIAL_STATE: UploadAttachmentActionState = {
+  success: false,
+  error: null,
+};
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -38,10 +42,8 @@ export default function TaskAttachmentModal({
   const isClosingRef = useRef(false);
   const [formKey, setFormKey] = useState(0);
   const [modalClosing, setModalClosing] = useState(false);
-  const [state, formAction] = useActionState(uploadTaskAttachment, {
-    success: false,
-    error: null,
-  } satisfies UploadAttachmentActionState);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const closeModal = useCallback(() => {
     const dialog = dialogRef.current;
@@ -71,16 +73,110 @@ export default function TaskAttachmentModal({
     }, 300);
   }, []);
 
-  useEffect(() => {
-    if (state.success) {
-      toast.success("Attachment uploaded!");
-      closeModal();
-    }
-  }, [state, closeModal]);
-
   function openModal() {
     setFormKey((key) => key + 1);
+    setError(null);
     dialogRef.current?.showModal();
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (pending) return;
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+    const file = formData.get("file");
+
+    if (!(file instanceof File)) {
+      setError("Please choose a file to upload.");
+      return;
+    }
+
+    if (file.size === 0) {
+      setError("The chosen file is empty.");
+      return;
+    }
+
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      setError("The file is larger than the allowed size.");
+      return;
+    }
+
+    if (!ACCEPTED_MIME_SET.has(file.type)) {
+      setError("This file type is not allowed.");
+      return;
+    }
+
+    setError(null);
+    setPending(true);
+
+    try {
+      const ticket = await createAttachmentUploadTicket({
+        taskId,
+        originalName: file.name,
+        mimeType: file.type,
+        size: file.size,
+      });
+
+      if (!ticket.success) {
+        setError(ticket.error);
+        return;
+      }
+
+      const result =
+        ticket.mode === "server"
+          ? // Local filesystem driver: the bytes travel through a Server Action.
+            await uploadTaskAttachment(INITIAL_STATE, formData)
+          : await uploadDirectly(ticket.storageKey, ticket.presignedUrl, file);
+
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+
+      toast.success("Attachment uploaded!");
+      closeModal();
+    } catch (uploadError) {
+      console.error("Attachment upload error:", uploadError);
+      setError("Something went wrong while uploading the file.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function uploadDirectly(
+    storageKey: string,
+    presignedUrl: string,
+    file: File,
+  ): Promise<UploadAttachmentActionState> {
+    // Vercel Blob: PUT the bytes straight to the signed URL, then finalize the
+    // FileRecord on the server (which validates the stored bytes by read-back).
+    const response = await fetch(presignedUrl, {
+      method: "PUT",
+      headers: { "content-type": file.type },
+      body: file,
+    });
+
+    if (!response.ok) {
+      console.error(
+        "Direct attachment upload failed:",
+        response.status,
+        await response.text().catch(() => ""),
+      );
+      return {
+        success: false,
+        error: "Could not upload the file. Please try again.",
+      };
+    }
+
+    const finalizeForm = new FormData();
+    finalizeForm.set("taskId", taskId);
+    finalizeForm.set("storageKey", storageKey);
+    finalizeForm.set("originalName", file.name);
+    finalizeForm.set("mimeType", file.type);
+    finalizeForm.set("size", String(file.size));
+
+    return createAttachmentRecord(INITIAL_STATE, finalizeForm);
   }
 
   return (
@@ -159,7 +255,7 @@ export default function TaskAttachmentModal({
           </ul>
 
           {/* Upload form */}
-          <form key={formKey} action={formAction} className="mt-5 space-y-4">
+          <form key={formKey} onSubmit={handleSubmit} className="mt-5 space-y-4">
             <input type="hidden" name="taskId" value={taskId} />
 
             <div>
@@ -175,24 +271,32 @@ export default function TaskAttachmentModal({
                 type="file"
                 accept={ACCEPTED_MIME_TYPES}
                 required
+                disabled={pending}
                 className="file-input file-input-bordered w-full"
                 aria-describedby={`attachment-file-error-${taskId}`}
               />
-              {state.error && (
+              {error && (
                 <p
                   id={`attachment-file-error-${taskId}`}
                   className="mt-1 text-sm text-error"
                 >
-                  {state.error}
+                  {error}
                 </p>
               )}
             </div>
 
             <div className="modal-action">
-              <button type="button" className="btn" onClick={closeModal}>
+              <button
+                type="button"
+                className="btn"
+                onClick={closeModal}
+                disabled={pending}
+              >
                 Cancel
               </button>
-              <SubmitButton label="Upload" pendingLabel="Uploading..." />
+              <button type="submit" disabled={pending} className="btn btn-primary">
+                {pending ? "Uploading..." : "Upload"}
+              </button>
             </div>
           </form>
         </div>
