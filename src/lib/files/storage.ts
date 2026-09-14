@@ -129,7 +129,13 @@ class VercelBlobStorage implements FileStorage {
   async read(storageKey: string): Promise<Buffer | null> {
     const { get } = await import("@vercel/blob");
 
-    const result = await get(storageKey, { access: "private" });
+    // `useCache: false` bypasses the CDN cache on private reads. This matters
+    // right after a direct client upload, where the cached entry for a brand
+    // new key can lag behind the store (the SDK's documented escape hatch).
+    const result = await get(storageKey, {
+      access: "private",
+      useCache: false,
+    });
 
     if (!result || result.statusCode !== 200) {
       return null;
@@ -241,6 +247,12 @@ export async function getStorageUploadPath(
       operation: "put",
       pathname: storageKey,
       access: "private",
+      // Mirror the contract of the server-side builder: no random suffix and
+      // no overwrite, so the object lands on the exact storageKey we read back
+      // in Flight — otherwise the delegated upload may store it under a
+      // suffixed key and the finalize step would 404.
+      addRandomSuffix: false,
+      allowOverwrite: false,
       allowedContentTypes: [options.mimeType],
       maximumSizeInBytes: options.maximumSizeInBytes,
       validUntil,
