@@ -64,7 +64,7 @@ export function SettingsTabs({ activeTab }: SettingsTabsProps) {
       aria-label="Settings sections"
       aria-orientation="horizontal"
       onKeyDown={handleKeyDown}
-      className="flex items-center gap-1 overflow-x-auto border-b border-base-200"
+      className="flex items-center gap-1 overflow-x-auto border-b border-base-200 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       {TABS.map((tab, index) => {
         const active = tab.id === activeTab;
