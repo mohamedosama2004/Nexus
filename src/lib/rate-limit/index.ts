@@ -9,6 +9,7 @@ export const RATE_LIMIT_POLICIES = {
   verificationResend: { limit: 3, windowMs: 60 * 60 * 1000 },
   inviteCreate: { limit: 20, windowMs: 60 * 60 * 1000 },
   upload: { limit: 30, windowMs: 60 * 60 * 1000 },
+  passwordChange: { limit: 5, windowMs: 60 * 60 * 1000 },
 } as const;
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES;
