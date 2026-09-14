@@ -6,16 +6,22 @@ import { getCurrentUser } from "@/src/lib/auth";
 import { getCurrentWorkspace } from "@/src/lib/current-workspace";
 import { hasWorkspacePermission } from "@/src/lib/authorization";
 
-import { ProfileSettings } from "./components/ProfileSettings";
+import { SettingsTabs, type SettingsTabId } from "./components/SettingsTabs";
 import { WorkspaceSettings } from "./components/WorkspaceSettings";
 import { SecuritySettings } from "./components/SecuritySettings";
 
 export const metadata: Metadata = {
   title: "Settings",
-  description: "Manage your Nexus workspace and account settings.",
+  description: "Manage your application and workspace preferences.",
 };
 
-export default async function SettingsPage() {
+type Props = {
+  searchParams: Promise<{
+    tab?: string;
+  }>;
+};
+
+export default async function SettingsPage({ searchParams }: Props) {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -55,27 +61,40 @@ export default async function SettingsPage() {
     }
   }
 
+  const { tab } = await searchParams;
+  const activeTab: SettingsTabId = tab === "security" ? "security" : "workspace";
+
   return (
-    <div className="mx-auto w-full max-w-3xl space-y-6">
-      <header>
+    <div className="mx-auto w-full max-w-3xl">
+      <header className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight text-base-content sm:text-3xl">
           Settings
         </h1>
         <p className="mt-1 text-sm text-base-content/50">
-          Manage your workspace and account settings.
+          Manage your application and workspace preferences.
         </p>
       </header>
 
-      <ProfileSettings />
+      <SettingsTabs activeTab={activeTab} />
 
-      <WorkspaceSettings
-        workspaceName={currentWorkspace?.workspace.name ?? null}
-        role={currentWorkspace?.membership.role ?? null}
-        canEditWorkspace={canEditWorkspace}
-        canLeaveWorkspace={canLeaveWorkspace}
-      />
-
-      <SecuritySettings hasPassword={account?.passwordHash != null} />
+      <div
+        role="tabpanel"
+        id={`${activeTab}-panel`}
+        aria-labelledby={`${activeTab}-tab`}
+        tabIndex={0}
+        className="mt-6 space-y-5"
+      >
+        {activeTab === "workspace" ? (
+          <WorkspaceSettings
+            workspaceName={currentWorkspace?.workspace.name ?? null}
+            role={currentWorkspace?.membership.role ?? null}
+            canEditWorkspace={canEditWorkspace}
+            canLeaveWorkspace={canLeaveWorkspace}
+          />
+        ) : (
+          <SecuritySettings hasPassword={account?.passwordHash != null} />
+        )}
+      </div>
     </div>
   );
 }
