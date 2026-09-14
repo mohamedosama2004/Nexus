@@ -11,7 +11,8 @@ export type workspacePermission =
   | "CREATE_TASK"
   | "UPDATE_TASK"
   | "DELETE_TASK"
-  | "INVITE_MEMBER";
+  | "INVITE_MEMBER"
+  | "UPDATE_WORKSPACE";
 
 export const workspaceRolePermissions: Record<Role, workspacePermission[]> = {
   OWNER: [
@@ -22,6 +23,7 @@ export const workspaceRolePermissions: Record<Role, workspacePermission[]> = {
     "UPDATE_TASK",
     "DELETE_TASK",
     "INVITE_MEMBER",
+    "UPDATE_WORKSPACE",
   ],
 
   ADMIN: [
@@ -32,6 +34,7 @@ export const workspaceRolePermissions: Record<Role, workspacePermission[]> = {
     "UPDATE_TASK",
     "DELETE_TASK",
     "INVITE_MEMBER",
+    "UPDATE_WORKSPACE",
   ],
 
   MEMBER: ["CREATE_TASK", "UPDATE_TASK"],
