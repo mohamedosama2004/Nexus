@@ -6,7 +6,9 @@ import { NextResponse } from "next/server";
  * Policy decisions:
  * - script-src: nonce + strict-dynamic in production; adds 'unsafe-eval' in dev for HMR/overlay
  * - style-src: 'unsafe-inline' — required by Next.js next/font, react-toastify, daisyui
- * - connect-src: 'self' for API + HMR websocket (dev adds ws:)
+ * - connect-src: 'self' for API + HMR websocket (dev adds ws:), plus the
+ *   Vercel Blob direct-upload endpoint (client-side attachment uploads PUT to
+ *   https://vercel.com/api/blob)
  * - img-src: self, data: (Google profile avatars), blob: (client previews)
  * - font-src: self, data: (next/font base64 subsets)
  * - frame-ancestors: 'none' — prevents all framing (supersedes X-Frame-Options)
@@ -24,7 +26,7 @@ export function buildCspHeader(nonce: string): string {
     `style-src 'self' 'unsafe-inline'`,
     `img-src 'self' data: blob:`,
     `font-src 'self' data:`,
-    `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
+    `connect-src 'self' https://vercel.com${isDev ? " ws: wss:" : ""}`,
     `object-src 'none'`,
     `base-uri 'self'`,
     `form-action 'self'`,

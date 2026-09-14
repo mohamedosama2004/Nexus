@@ -38,6 +38,11 @@ describe("buildCspHeader", () => {
     expect(csp).not.toContain("upgrade-insecure-requests");
   });
 
+  it("allows the Vercel Blob direct-upload endpoint via connect-src", () => {
+    const csp = buildCspHeader("nonce");
+    expect(csp).toContain("connect-src 'self' https://vercel.com");
+  });
+
   it("blocks frames and plugins", () => {
     const csp = buildCspHeader("nonce");
     expect(csp).toContain("frame-ancestors 'none'");
