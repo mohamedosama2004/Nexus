@@ -4,6 +4,8 @@ Nexus is a workspace-based project management SaaS application built with **Next
 
 Subsequent development added Google OAuth and email verification, persisted avatar and attachment uploads behind a storage abstraction, project search/filter/sort/pagination, workspace and account settings, a security hardening pass (CSP, security headers, origin checking, rate limiting, content-signature file validation), technical SEO metadata, and a production deployment configuration backed by Vercel Blob. [22] [24] [26] [27] [30]
 
+**Live demo:** https://nexus-tau-blush.vercel.app/
+
 > **Documentation scope:** This README describes the architecture and data model currently implemented in the repository. It intentionally distinguishes persisted Prisma models from client-side or legacy TypeScript shapes.
 
 ## Contents
