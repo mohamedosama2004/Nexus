@@ -20,6 +20,7 @@ Nexus is a workspace-based project management SaaS application built with **Next
 - [Validation and quality checks](#validation-and-quality-checks)
 - [Current implementation notes](#current-implementation-notes)
 - [References](#references)
+- [Screenshots](#screenshots)
 
 ## Product scope
 
@@ -432,3 +433,18 @@ The following details are important when extending the current system because th
 [19]: ./prisma.config.ts "Prisma configuration"
 [20]: ./src/app/api/projects/%5BprojectId%5D/invitations/route.ts "Project invitation endpoint"
 [21]: ./src/lib/api-response.ts "Shared API error response helper"
+
+## Screenshots
+
+| Screenshot | Image |
+|---|---|
+| Landing Page | ![Landing Page](screenshots/landingpage.png) |
+| Dashboard | ![Dashboard](screenshots/dashboard.png) |
+| Profile | ![Profile](screenshots/profile.png) |
+| Settings | ![Settings](screenshots/settings.png) |
+| Projects (List) | ![Projects List](screenshots/projects(list).png) |
+| Projects (Grid) | ![Projects Grid](screenshots/projects(grid).png) |
+| Project Details | ![Project Details](screenshots/projectdetails.png) |
+| Members | ![Members](screenshots/members.png) |
+| Invite to Project | ![Invite to Project](screenshots/inivte%20to%20project.png) |
+| Invitation Email | ![Invitation Email](screenshots/invitation%20email.png) |
